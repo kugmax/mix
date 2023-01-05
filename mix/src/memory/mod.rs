@@ -27,31 +27,19 @@ impl Word {
         if access.left == 0 && access.right == 0 {
             return self.value & SIGN;
         }
-        if access.left == 1 && access.right == 1 {
-            return (self.value & BYTE_1) >> 24;
-        }
-        if access.left == 2 && access.right == 2 {
-            return (self.value & BYTE_2) >> 18;
-        }
-        if access.left == 3 && access.right == 3 {
-            return (self.value & BYTE_3) >> 12;
-        }
-        if access.left == 4 && access.right == 4 {
-            return (self.value & BYTE_4) >> 6;
-        }
-        if access.left == 5 && access.right == 5 {
-            return self.value & BYTE_5;
-        }
 
         let mut result = 0;
         for b in access.left..access.right + 1 {
+            if b == 0 {
+                continue;
+            }
             result |= self.value & BYTES[b as usize];
-            //println!("{:#034b}", result)
+            // println!("{:#034b}", result)
         }
 
         result >>= 6 * (5 - access.right);
         if access.left == 0 {
-           result |= self.value & SIGN;
+            result |= self.value & SIGN;
         }
 
         result
@@ -117,25 +105,34 @@ mod tests {
     fn word_get_by_access() {
         let word = Word::new(0b10_101111_110111_111011_111101_111110);
 
-        for l in 0..6 {
-            for r in l..6 {
-                let result = word.get_by_access(WordAccess::new(l, r));
-                println!("[{l}:{r}] {:#034b} {result}", result);
-            }
-        }
-      
-        let mut result = word.get_by_access(WordAccess::new(0, 0));
-        println!("[0:0] {:#034b} {result}", result);
-        assert_eq!(
-            0b10_000000_000000_000000_000000_000000,
-            result
-        );
+        // let result = word.get_by_access(WordAccess::new(0, 1));
+        // println!("{:#034b}", result);
 
-        let mut result = word.get_by_access(WordAccess::new(4, 5));
-        println!("[4:5] {:#034b} {result}", result);
-        assert_eq!(
-            0b00_000000_000000_000000_111101_111110,
-            result
-        );
+        assert_eq!(0b10_000000_000000_000000_000000_000000, word.get_by_access(WordAccess::new(0, 0)), "0:0");
+        assert_eq!(0b10_000000_000000_000000_000000_101111, word.get_by_access(WordAccess::new(0, 1)), "0:1");
+        assert_eq!(0b10_000000_000000_000000_101111_110111, word.get_by_access(WordAccess::new(0, 2)), "0:2");
+        assert_eq!(0b10_000000_000000_101111_110111_111011, word.get_by_access(WordAccess::new(0, 3)), "0:3");
+        assert_eq!(0b10_000000_101111_110111_111011_111101, word.get_by_access(WordAccess::new(0, 4)), "0:4");
+        assert_eq!(0b10_101111_110111_111011_111101_111110, word.get_by_access(WordAccess::new(0, 5)), "0:5");
+
+        assert_eq!(0b00_000000_000000_000000_000000_101111, word.get_by_access(WordAccess::new(1, 1)), "1:1");
+        assert_eq!(0b00_000000_000000_000000_101111_110111, word.get_by_access(WordAccess::new(1, 2)), "1:2");
+        assert_eq!(0b00_000000_000000_101111_110111_111011, word.get_by_access(WordAccess::new(1, 3)), "1:3");
+        assert_eq!(0b00_000000_101111_110111_111011_111101, word.get_by_access(WordAccess::new(1, 4)), "1:4");
+        assert_eq!(0b00_101111_110111_111011_111101_111110, word.get_by_access(WordAccess::new(1, 5)), "1:5");
+
+        assert_eq!(0b00_000000_000000_000000_000000_110111, word.get_by_access(WordAccess::new(2, 2)), "2:2");
+        assert_eq!(0b00_000000_000000_000000_110111_111011, word.get_by_access(WordAccess::new(2, 3)), "2:3");
+        assert_eq!(0b00_000000_000000_110111_111011_111101, word.get_by_access(WordAccess::new(2, 4)), "2:4");
+        assert_eq!(0b00_000000_110111_111011_111101_111110, word.get_by_access(WordAccess::new(2, 5)), "2:5");
+
+        assert_eq!(0b00_000000_000000_000000_000000_111011, word.get_by_access(WordAccess::new(3, 3)), "3:3");
+        assert_eq!(0b00_000000_000000_000000_111011_111101, word.get_by_access(WordAccess::new(3, 4)), "3:4");
+        assert_eq!(0b00_000000_000000_111011_111101_111110, word.get_by_access(WordAccess::new(3, 5)), "3:5");
+        
+        assert_eq!(0b00_000000_000000_000000_000000_111101, word.get_by_access(WordAccess::new(4, 4)), "4:4");
+        assert_eq!(0b00_000000_000000_000000_111101_111110, word.get_by_access(WordAccess::new(4, 5)), "4:5");
+
+        assert_eq!(0b00_000000_000000_000000_000000_111110, word.get_by_access(WordAccess::new(5, 5)), "5:5");
     }
 }
