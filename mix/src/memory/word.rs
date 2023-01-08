@@ -14,6 +14,15 @@ pub struct Word {
     value: u32,
 }
 
+trait Instruction {
+    fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word;
+
+    fn get_address(&self) -> i32;
+    fn get_i(&self) -> u8;
+    fn get_f(&self) -> WordAccess;
+    fn get_c(&self) -> u8;
+}
+
 impl Word {
     pub fn new(value: u32) -> Word {
         Word { value }
@@ -22,10 +31,6 @@ impl Word {
     pub fn set(&mut self, value: u32) {
         self.value = value;
     }
-
-    // fn get(&self) -> u32 {
-    // self.value
-    // }
 
     pub fn get_by_access(&self, access: WordAccess) -> u32 {
         if access.left == 0 && access.right == 0 {
@@ -47,6 +52,60 @@ impl Word {
         }
 
         result
+    }
+
+    pub fn get_sign_mask_from_value(value: i32) -> u32 {
+        if value < 0 {
+            SIGN
+        } else {
+            0
+        }
+    }
+}
+
+impl Instruction for Word {
+  // TODO: needs to add asserts for 6 bit 
+    fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word {
+        let sign = Word::get_sign_mask_from_value(address);
+      
+        let value = address.abs() as u32;
+
+        let value = value << 6;
+        let value = value | i as u32;
+
+        let value = value << 6;
+        let value = value | f.spec as u32;
+
+        let value = value << 6;
+        let value = value | c as u32;
+
+        let value = value | sign;
+
+        Word { value }
+    }
+
+    fn get_address(&self) -> i32 {
+        let positive_val: i32 = ((self.value & (BYTE_1 | BYTE_2)) >> 6 * 3) as i32;
+        // println!("{}, {}", self.value, positive_val);
+        // println!("{:#034b}, {:#034b}", self.value, (self.value & SIGN));
+
+        return if (self.value & SIGN) == 0 {
+            positive_val
+        } else {
+            -positive_val
+        };
+    }
+
+    fn get_i(&self) -> u8 {
+        ((self.value & BYTE_3) >> 6 * 2) as u8
+    }
+
+    fn get_f(&self) -> WordAccess {
+        WordAccess::new_by_spec(((self.value & BYTE_4) >> 6) as u8)
+    }
+
+    fn get_c(&self) -> u8 {
+        (self.value & BYTE_5) as u8
     }
 }
 
@@ -222,5 +281,20 @@ mod tests {
             word.get_by_access(WordAccess::new(5, 5)),
             "5:5"
         );
+    }
+
+    #[test]
+    fn word_as_instruction() {
+        let w = Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8);
+        assert_eq!(2_000, w.get_address());
+        assert_eq!(0, w.get_i());
+        assert_eq!(5, w.get_f().spec);
+        assert_eq!(8, w.get_c());
+
+        let w = Word::new_instruction(-2_000, 2, WordAccess::new(1, 3), 8);
+        assert_eq!(-2_000, w.get_address());
+        assert_eq!(2, w.get_i());
+        assert_eq!(11, w.get_f().spec);
+        assert_eq!(8, w.get_c());
     }
 }

@@ -1,6 +1,6 @@
-use crate::memory::data::Word;
+use crate::memory::word::Word;
 
-pub mod data;
+pub mod word;
 
 pub struct Memory {
     mem: Vec<Box<Word>>,
