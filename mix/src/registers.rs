@@ -5,31 +5,39 @@ pub struct ShortRegister {
 }
 
 pub struct Registers {
-    rA: Word,
-    rX: Word,
-    // rI1: ShortRegister,
-    // rI2: ShortRegister,
-    // rI3: ShortRegister,
-    // rI4: ShortRegister,
-    // rI5: ShortRegister,
-    // rI6: ShortRegister,
+    a: Word,
+    x: Word,
+    // i1: ShortRegister,
+    // i2: ShortRegister,
+    // i3: ShortRegister,
+    // i4: ShortRegister,
+    // i5: ShortRegister,
+    // i6: ShortRegister,
     //
-    // rJ: ShortRegister,
+    // rj: ShortRegister,
 }
 
 impl Registers {
     pub fn new() -> Registers {
         Registers {
-            rA: Word::new(0),
-            rX: Word::new(0),
+            a: Word::new(0),
+            x: Word::new(0),
         }
     }
 
-    pub fn set_rA(&mut self, word: Word) {
-        self.rA = word;
+    pub fn set_a(&mut self, word: Word) {
+        self.a = word;
     }
 
-    pub fn get_rA(&self) -> Word {
-      self.rA
+    pub fn get_a(&self) -> Word {
+      self.a
+    }
+
+    pub fn set_x(&mut self, word: Word) {
+        self.x = word;
+    }
+
+    pub fn get_x(&self) -> Word {
+      self.x
     }
 }

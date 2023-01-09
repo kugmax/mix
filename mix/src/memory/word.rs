@@ -58,8 +58,6 @@ impl Word {
         result
     }
 
-    // pub fn get_by_bytes(&self, mask)
-
     pub fn get_sign_mask_from_value(value: i32) -> u32 {
         if value < 0 {
             SIGN
