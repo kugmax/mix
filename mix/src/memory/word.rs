@@ -9,12 +9,12 @@ const BYTES: [u32; 6] = [SIGN, BYTE_1, BYTE_2, BYTE_3, BYTE_4, BYTE_5];
 
 /// Word: 5 bytes and +- sign
 /// byte is 6 bits from 0-63
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Word {
     value: u32,
 }
 
-trait Instruction {
+pub trait Instruction {
     fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word;
 
     fn get_address(&self) -> i32;
@@ -30,6 +30,10 @@ impl Word {
 
     pub fn set(&mut self, value: u32) {
         self.value = value;
+    }
+
+    pub fn get(&self) -> u32 {
+        self.value
     }
 
     pub fn get_by_access(&self, access: WordAccess) -> u32 {
@@ -53,6 +57,8 @@ impl Word {
 
         result
     }
+
+    // pub fn get_by_bytes(&self, mask)
 
     pub fn get_sign_mask_from_value(value: i32) -> u32 {
         if value < 0 {
@@ -86,8 +92,6 @@ impl Instruction for Word {
 
     fn get_address(&self) -> i32 {
         let positive_val: i32 = ((self.value & (BYTE_1 | BYTE_2)) >> 6 * 3) as i32;
-        // println!("{}, {}", self.value, positive_val);
-        // println!("{:#034b}, {:#034b}", self.value, (self.value & SIGN));
 
         return if (self.value & SIGN) == 0 {
             positive_val
@@ -117,7 +121,7 @@ pub struct WordAccess {
 }
 
 impl WordAccess {
-    fn new(left: u8, right: u8) -> WordAccess {
+    pub fn new(left: u8, right: u8) -> WordAccess {
         if left > 5 || right > 5 {
             panic!("wrong left, right values {}:{}", left, right)
         }

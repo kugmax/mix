@@ -16,11 +16,11 @@ impl Memory {
         Memory { mem: mem }
     }
 
-    pub fn get(&self, i: usize) -> &Word {
-        self.mem.get(i).expect("out of range {i}")
+    pub fn get(&self, i: usize) -> Word {
+        Word::new(self.mem.get(i).expect("out of range {i}").get())
     }
-    
-    pub fn set(&mut self, i:usize, value:u32) {
+
+    pub fn set(&mut self, i: usize, value: u32) {
         self.mem.get_mut(i).expect("out of range {i}").set(value);
     }
 }
@@ -31,11 +31,10 @@ mod tests {
 
     #[test]
     fn set_value_by_index() {
-
         let mut m = Memory::new();
-        println!("#######################3 {:#?}", m.get(0));
+        // println!("#######################3 {:#?}", m.get(0));
         m.set(1, 66);
-        println!("#######################3 {:#?}", m.get(1));
-        
+        // println!("#######################3 {:#?}", m.get(1));
+        assert_eq!(66, m.get(1).get());
     }
 }
