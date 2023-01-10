@@ -129,8 +129,16 @@ impl ShortWord {
         self.value
     }
 
+    // TODO: this is common with Word
+    pub fn get_byte(&self, byte_number: u8) -> u32 {
+      let mut result = self.value & BYTES[byte_number as usize];
+      result >>= 6 * (5 - byte_number);
+      result
+    }
+
     fn to_short_value(value: u32) -> u32 {
-      value & (SIGN | BYTE_4 | BYTE_5)
+      let result = value & (SIGN | BYTE_4 | BYTE_5);
+      result
     }
 }
 
