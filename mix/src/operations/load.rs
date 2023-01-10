@@ -180,10 +180,10 @@ mod tests {
         let mut r = Registers::new();
         println!("registers are created");
 
-        let load = LDi::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 8));
+        let load = LDi::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 8));
         load.execute(&m, &mut r);
 
-        let ri = r.get_i(1);
+        let ri = r.get_i(2);
 
         assert_ne!(ri.get_byte(0), 0, "ri sign is wrogn");
         assert_eq!(ri.get_byte(1), 0, "ri byte 1 is wrong");
