@@ -111,6 +111,29 @@ impl Instruction for Word {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct ShortWord {
+    value: u32,
+}
+
+impl ShortWord {
+    pub fn new(value: u32) -> ShortWord {
+        ShortWord { value : ShortWord::to_short_value(value) }
+    }
+
+    pub fn set(&mut self, value: u32) {
+        self.value = ShortWord::to_short_value(value);
+    }
+
+    pub fn get(&self) -> u32 {
+        self.value
+    }
+
+    fn to_short_value(value: u32) -> u32 {
+      value & (SIGN | BYTE_4 | BYTE_5)
+    }
+}
+
 #[derive(Debug)]
 pub struct WordAccess {
     pub left: u8,
