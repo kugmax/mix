@@ -1,5 +1,5 @@
 pub mod load;
-// pub mod store;
+pub mod store;
 // pub mod arithmetic;
 // pub mod address_transfer;
 // pub mod compare;
