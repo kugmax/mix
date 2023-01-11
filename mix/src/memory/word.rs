@@ -47,7 +47,7 @@ impl Word {
                 continue;
             }
             result |= self.value & BYTES[b as usize];
-            // println!("{:#034b}", result)
+            // println!("{:#034b}", result);
         }
 
         result >>= 6 * (5 - access.right);
@@ -55,6 +55,17 @@ impl Word {
             result |= self.value & SIGN;
         }
 
+        result
+    }
+
+    pub fn get_negative_by_access(&self, access: WordAccess) -> u32 {
+        let positive_value = self.get_by_access(access);
+        let sign = positive_value & SIGN;
+        let result = if sign == 0 {
+            positive_value | SIGN
+        } else {
+            positive_value & !SIGN
+        };
         result
     }
 
@@ -68,10 +79,10 @@ impl Word {
 }
 
 impl Instruction for Word {
-  // TODO: needs to add asserts for 6 bit 
+    // TODO: needs to add asserts for 6 bit
     fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word {
         let sign = Word::get_sign_mask_from_value(address);
-      
+
         let value = address.abs() as u32;
 
         let value = value << 6;
@@ -111,6 +122,8 @@ impl Instruction for Word {
     }
 }
 
+/// ShortWord: 2 bytes (BYTE_4,BYTE_5) and +- sign
+/// byte is 6 bits from 0-63
 #[derive(Debug, Copy, Clone)]
 pub struct ShortWord {
     value: u32,
@@ -118,7 +131,9 @@ pub struct ShortWord {
 
 impl ShortWord {
     pub fn new(value: u32) -> ShortWord {
-        ShortWord { value : ShortWord::to_short_value(value) }
+        ShortWord {
+            value: ShortWord::to_short_value(value),
+        }
     }
 
     pub fn set(&mut self, value: u32) {
@@ -131,14 +146,12 @@ impl ShortWord {
 
     // TODO: this is common with Word
     pub fn get_byte(&self, byte_number: u8) -> u32 {
-      let mut result = self.value & BYTES[byte_number as usize];
-      result >>= 6 * (5 - byte_number);
-      result
+        let result = self.value & BYTES[byte_number as usize];
+        result >> 6 * (5 - byte_number)
     }
 
     fn to_short_value(value: u32) -> u32 {
-      let result = value & (SIGN | BYTE_4 | BYTE_5);
-      result
+        value & (SIGN | BYTE_4 | BYTE_5)
     }
 }
 
@@ -312,6 +325,125 @@ mod tests {
         assert_eq!(
             0b00_000000_000000_000000_000000_111110,
             word.get_by_access(WordAccess::new(5, 5)),
+            "5:5"
+        );
+    }
+
+    #[test]
+    fn get_negativev_by_access() {
+        let word = Word::new(0b10_101111_110111_111011_111101_111110);
+
+        // let result = word.get_by_access(WordAccess::new(0, 1));
+        // println!("{:#034b}", result);
+
+        // assert_eq!(
+        // 0b00_000000_000000_000000_000000_000000,
+        // word.get_negative_by_access(WordAccess::new(0, 0)),
+        // "0:0"
+        // );
+        // assert_eq!(
+        // 0b00_000000_000000_000000_000000_101111,
+        // word.get_negative_by_access(WordAccess::new(0, 1)),
+        // "0:1"
+        // );
+        // assert_eq!(
+        // 0b00_000000_000000_000000_101111_110111,
+        // word.get_negative_by_access(WordAccess::new(0, 2)),
+        // "0:2"
+        // );
+        // assert_eq!(
+        // 0b00_000000_000000_101111_110111_111011,
+        // word.get_negative_by_access(WordAccess::new(0, 3)),
+        // "0:3"
+        // );
+        // assert_eq!(
+        // 0b00_000000_101111_110111_111011_111101,
+        // word.get_negative_by_access(WordAccess::new(0, 4)),
+        // "0:4"
+        // );
+        // assert_eq!(
+        // 0b00_101111_110111_111011_111101_111110,
+        // word.get_negative_by_access(WordAccess::new(0, 5)),
+        // "0:5"
+        // );
+
+        assert_eq!(
+            0b10_000000_000000_000000_000000_101111,
+            word.get_negative_by_access(WordAccess::new(1, 1)),
+            "1:1"
+        );
+        assert_eq!(
+            0b10_000000_000000_000000_101111_110111,
+            word.get_negative_by_access(WordAccess::new(1, 2)),
+            "1:2"
+        );
+        assert_eq!(
+            0b10_000000_000000_101111_110111_111011,
+            word.get_negative_by_access(WordAccess::new(1, 3)),
+            "1:3"
+        );
+        assert_eq!(
+            0b10_000000_101111_110111_111011_111101,
+            word.get_negative_by_access(WordAccess::new(1, 4)),
+            "1:4"
+        );
+        assert_eq!(
+            0b10_101111_110111_111011_111101_111110,
+            word.get_negative_by_access(WordAccess::new(1, 5)),
+            "1:5"
+        );
+
+        assert_eq!(
+            0b10_000000_000000_000000_000000_110111,
+            word.get_negative_by_access(WordAccess::new(2, 2)),
+            "2:2"
+        );
+        assert_eq!(
+            0b10_000000_000000_000000_110111_111011,
+            word.get_negative_by_access(WordAccess::new(2, 3)),
+            "2:3"
+        );
+        assert_eq!(
+            0b10_000000_000000_110111_111011_111101,
+            word.get_negative_by_access(WordAccess::new(2, 4)),
+            "2:4"
+        );
+        assert_eq!(
+            0b10_000000_110111_111011_111101_111110,
+            word.get_negative_by_access(WordAccess::new(2, 5)),
+            "2:5"
+        );
+
+        assert_eq!(
+            0b10_000000_000000_000000_000000_111011,
+            word.get_negative_by_access(WordAccess::new(3, 3)),
+            "3:3"
+        );
+        assert_eq!(
+            0b10_000000_000000_000000_111011_111101,
+            word.get_negative_by_access(WordAccess::new(3, 4)),
+            "3:4"
+        );
+        assert_eq!(
+            0b10_000000_000000_111011_111101_111110,
+            word.get_negative_by_access(WordAccess::new(3, 5)),
+            "3:5"
+        );
+
+        assert_eq!(
+            0b10_000000_000000_000000_000000_111101,
+            word.get_negative_by_access(WordAccess::new(4, 4)),
+            "4:4"
+        );
+        assert_eq!(
+            0b10_000000_000000_000000_111101_111110,
+            word.get_negative_by_access(WordAccess::new(4, 5)),
+            "4:5"
+        );
+
+        assert_eq!(
+            0b10_000000_000000_000000_000000_111110,
+            word.get_negative_by_access(WordAccess::new(5, 5)),
             "5:5"
         );
     }
