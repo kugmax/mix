@@ -4,6 +4,7 @@ use crate::memory::word::Word;
 use crate::memory::word::WordAccess;
 use crate::memory::Memory;
 use crate::registers::Registers;
+use crate::memory::word::Bytes;
 
 pub trait LoadOperation {
     fn execute(&self, mem: &Memory, reg: &mut Registers);
