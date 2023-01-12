@@ -8,6 +8,32 @@ use crate::registers::Registers;
 
 pub trait StoreOperation {
     fn execute(&self, mem: &mut Memory, reg: &Registers);
+    
+    fn store(instruction: impl Instruction, reg: Word, mem: &mut Memory) {
+        let addr = instruction.get_address();
+        let addr = addr.abs() as usize;
+
+        let f = instruction.get_f();
+
+        let from = reg;
+        let mut to = mem.get(addr);
+
+        for i in 0..f.right - f.left + 1 {
+            let b_from = 5 - i;
+            let b_to = f.right - i;
+            // println!("{b_from} -> {b_to}");
+            if b_from == 0 || b_to == 0 {
+                continue;
+            }
+            to.set_byte(b_to, from.get_byte(b_from));
+        }
+
+        if f.left == 0 {
+            to.set_sign(from.get_sign());
+        }
+
+        mem.set(addr, to.get());
+    }
 }
 
 struct STA {
@@ -29,29 +55,30 @@ impl STA {
 
 impl StoreOperation for STA {
     fn execute(&self, mem: &mut Memory, reg: &Registers) {
-        let addr = self.instruction.get_address();
-        let addr = addr.abs() as usize;
+        <STA as StoreOperation>::store(self.instruction, reg.get_a(), mem);
+    }
+}
 
-        let f = self.instruction.get_f();
+struct STX {
+    code: u32,
+    execution_time: u32,
 
-        let from = reg.get_a();
-        let mut to = mem.get(addr);
+    instruction: Word,
+}
 
-        for i in 0..f.right - f.left + 1 {
-            let b_from = 5 - i;
-            let b_to = f.right - i;
-            // println!("{b_from} -> {b_to}");
-            if b_from == 0 || b_to == 0 {
-                continue;
-            }
-            to.set_byte(b_to, from.get_byte(b_from));
+impl STX {
+    pub fn new(instruction: Word) -> STX {
+        STX {
+            code: 31,
+            execution_time: 2,
+            instruction: instruction,
         }
+    }
+}
 
-        if f.left == 0 {
-            to.set_sign(from.get_sign());
-        }
-
-        mem.set(addr, to.get());
+impl StoreOperation for STX {
+    fn execute(&self, mem: &mut Memory, reg: &Registers) {
+        <STX as StoreOperation>::store(self.instruction, reg.get_x(), mem);
     }
 }
 
@@ -101,6 +128,52 @@ mod tests {
 
         m.set(2_000, m_initial.get());
         let store = STA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 8));
+        store.execute(&mut m, &mut r);
+        assert_by_bytes(m.get(2_000), 0, 0, 2, 3, 4, 5);
+    }
+
+    #[test]
+    fn stx() {
+        let m_initial = Word::new_by_bytes(-1, [1, 2, 3, 4, 5]);
+        let r_initial = Word::new_by_bytes(0, [6, 7, 8, 9, 0]);
+
+        // print!("###### from: ");
+        // print_by_bytes(&r_initial);
+        // print!("###### to  : ");
+        // print_by_bytes(&m_initial);
+
+        let mut m = Memory::new();
+
+        let mut r = Registers::new();
+        r.set_x(r_initial);
+
+        m.set(2_000, m_initial.get());
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), 0, 6, 7, 8, 9, 0);
+
+        m.set(2_000, m_initial.get());
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 8));
+        store.execute(&mut m, &mut r);
+        assert_by_bytes(m.get(2_000), -1, 6, 7, 8, 9, 0);
+
+        m.set(2_000, m_initial.get());
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 8));
+        store.execute(&mut m, &mut r);
+        assert_by_bytes(m.get(2_000), -1, 1, 2, 3, 4, 0);
+
+        m.set(2_000, m_initial.get());
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 2), 8));
+        store.execute(&mut m, &mut r);
+        assert_by_bytes(m.get(2_000), -1, 1, 0, 3, 4, 5);
+
+        m.set(2_000, m_initial.get());
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 3), 8));
+        store.execute(&mut m, &mut r);
+        assert_by_bytes(m.get(2_000), -1, 1, 9, 0, 4, 5);
+
+        m.set(2_000, m_initial.get());
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 8));
         store.execute(&mut m, &mut r);
         assert_by_bytes(m.get(2_000), 0, 0, 2, 3, 4, 5);
     }
