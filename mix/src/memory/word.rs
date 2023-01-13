@@ -19,7 +19,7 @@ pub trait Instruction {
 pub trait Bytes {
     type Item;
 
-    fn new_by_bytes(sign: i8, bytes: [u8; 5]) -> Self::Item;
+    fn new_by_bytes(sign: i8, bytes: &[u8]) -> Self::Item;
     fn get_byte(&self, byte_number: u8) -> u8;
     fn set_byte(&mut self, byte_number: u8, value: u8);
     fn get_sign(&self) -> i8; // 0 or -1
@@ -67,28 +67,6 @@ impl Word {
 
         result
     }
-
-    // pub fn get_by_access_rhs(&self, access: WordAccess) -> u32 {
-        // if access.spec == 0 {
-            // return self.value & SIGN;
-        // }
-//
-        // let mut result = 0;
-        // for b in 5..5 - (access.right - access.left) {
-            // if b == 0 {
-                // continue;
-            // }
-            // result |= self.value & BYTES[b as usize];
-            // println!("{:#034b}", result);
-        // }
-//
-        // result >>= 6 * (5 - access.right);
-        // if access.left == 0 {
-            // result |= self.value & SIGN;
-        // }
-//
-        // result
-    // }
 
     pub fn get_negative_by_access(&self, access: WordAccess) -> u32 {
         let positive_value = self.get_by_access(access);
@@ -157,7 +135,7 @@ impl Instruction for Word {
 impl Bytes for Word {
     type Item = Word;
 
-    fn new_by_bytes(sign: i8, bytes: [u8; 5]) -> Word {
+    fn new_by_bytes(sign: i8, bytes: &[u8]) -> Word {
         let value = bytes[0] as u32;
 
         let value = value << 6;
@@ -234,14 +212,59 @@ impl ShortWord {
         self.value
     }
 
-    // TODO: this is common with Word
-    pub fn get_byte(&self, byte_number: u8) -> u32 {
-        let result = self.value & BYTES[byte_number as usize];
-        result >> 6 * (5 - byte_number)
-    }
-
     fn to_short_value(value: u32) -> u32 {
         value & (SIGN | BYTE_4 | BYTE_5)
+    }
+}
+
+impl Bytes for ShortWord {
+    type Item = ShortWord;
+
+    fn new_by_bytes(sign: i8, bytes: &[u8]) -> ShortWord {
+        let value = bytes[0] as u32;
+
+        let value = value << 6;
+        let value = value | bytes[1] as u32;
+
+        let value = value | Word::get_sign_mask_from_value(sign as i32);
+
+        ShortWord { value }
+    }
+
+    fn get_byte(&self, byte_number: u8) -> u8 {
+        if byte_number < 1 || byte_number > 5 {
+            panic!("{byte_number} is out of scope");
+        }
+
+        let byte_number = byte_number;
+        let mut result = self.value & BYTES[byte_number as usize];
+        result >>= 6 * (5 - byte_number);
+        result as u8
+    }
+    
+    fn set_byte(&mut self, byte_number: u8, value: u8) {
+        if byte_number < 1 || byte_number > 5 {
+            panic!("{byte_number} is out of scope");
+        }
+        let byte_number = byte_number;
+        let value = value as u32;
+        let value = value << 6 * (5 - byte_number);
+        let result = self.value & !BYTES[byte_number as usize];
+        self.value = value | result;
+    }
+
+    fn get_sign(&self) -> i8 {
+        if self.value & SIGN == 0 {
+            0
+        } else {
+            -1
+        }
+    }
+
+    fn set_sign(&mut self, sign:i8)  { 
+        let value = Word::get_sign_mask_from_value(sign as i32);
+        let result = self.value & !SIGN;
+        self.value = value | result;
     }
 }
 
@@ -540,7 +563,7 @@ mod tests {
 
     #[test]
     fn word_get_set_bytes() {
-        let mut w = Word::new_by_bytes(0, [1, 2, 3, 4, 5]);
+        let mut w = Word::new_by_bytes(0, &[1, 2, 3, 4, 5]);
 
         w.set_sign(-1);
         assert_eq!(-1, w.get_sign());

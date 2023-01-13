@@ -8,7 +8,7 @@ use crate::registers::Registers;
 
 pub trait StoreOperation {
     fn execute(&self, mem: &mut Memory, reg: &Registers);
-    
+
     fn store(instruction: impl Instruction, reg: Word, mem: &mut Memory) {
         let addr = instruction.get_address();
         let addr = addr.abs() as usize;
@@ -21,7 +21,6 @@ pub trait StoreOperation {
         for i in 0..f.right - f.left + 1 {
             let b_from = 5 - i;
             let b_to = f.right - i;
-            // println!("{b_from} -> {b_to}");
             if b_from == 0 || b_to == 0 {
                 continue;
             }
@@ -82,14 +81,76 @@ impl StoreOperation for STX {
     }
 }
 
+struct STi {
+    code: u32,
+    execution_time: u32,
+    i: u8,
+
+    instruction: Word,
+}
+
+impl STi {
+    pub fn new(instruction: Word) -> STi {
+        let i = instruction.get_i();
+        STi {
+            code: 24 + i as u32,
+            execution_time: 2,
+            i: i,
+            instruction,
+        }
+    }
+
+    pub fn execute(&self, mem: &mut Memory, reg: &Registers) {
+        let addr = self.instruction.get_address();
+        let addr = addr.abs() as usize;
+
+        let f = self.instruction.get_f();
+
+        let from = reg.get_i(self.i as usize);
+        let mut to = mem.get(addr);
+        to.set_byte(1, 0);
+        to.set_byte(2, 0);
+        to.set_byte(3, 0);
+
+
+        for i in 0..f.right - f.left + 1 {
+            let b_from = 5 - i;
+            let b_to = f.right - i;
+            if b_from == 0 || b_to == 0 {
+                continue;
+            }
+            to.set_byte(b_to, from.get_byte(b_from));
+        }
+
+        if f.left == 0 {
+            to.set_sign(from.get_sign());
+        }
+
+        mem.set(addr, to.get());
+    }
+}
+
+fn print_by_bytes(w: &impl Bytes) {
+    let sign = if w.get_sign() == 0 { "+" } else { "-" };
+    println!(
+        "{}{}{}{}{}{}",
+        sign,
+        w.get_byte(1),
+        w.get_byte(2),
+        w.get_byte(3),
+        w.get_byte(4),
+        w.get_byte(5)
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn sta() {
-        let m_initial = Word::new_by_bytes(-1, [1, 2, 3, 4, 5]);
-        let r_initial = Word::new_by_bytes(0, [6, 7, 8, 9, 0]);
+        let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
+        let r_initial = Word::new_by_bytes(0, &[6, 7, 8, 9, 0]);
 
         // print!("###### from: ");
         // print_by_bytes(&r_initial);
@@ -134,8 +195,8 @@ mod tests {
 
     #[test]
     fn stx() {
-        let m_initial = Word::new_by_bytes(-1, [1, 2, 3, 4, 5]);
-        let r_initial = Word::new_by_bytes(0, [6, 7, 8, 9, 0]);
+        let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
+        let r_initial = Word::new_by_bytes(0, &[6, 7, 8, 9, 0]);
 
         // print!("###### from: ");
         // print_by_bytes(&r_initial);
@@ -178,17 +239,35 @@ mod tests {
         assert_by_bytes(m.get(2_000), 0, 0, 2, 3, 4, 5);
     }
 
-    fn print_by_bytes(w: &Word) {
-        let sign = if w.get_sign() == 0 { "+" } else { "-" };
-        println!(
-            "{}{}{}{}{}{}",
-            sign,
-            w.get_byte(1),
-            w.get_byte(2),
-            w.get_byte(3),
-            w.get_byte(4),
-            w.get_byte(5)
-        );
+    #[test]
+    fn sti() {
+        let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
+        let r_initial = ShortWord::new_by_bytes(0, &[6, 7]);
+
+        let mut m = Memory::new();
+
+        let mut r = Registers::new();
+        r.set_i(2, r_initial);
+
+        m.set(2_000, m_initial.get());
+        let store = STi::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), 0, 0, 0, 0, 6, 7);
+
+        m.set(2_000, m_initial.get());
+        let store = STi::new(Word::new_instruction(2_000, 2, WordAccess::new(4, 5), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 6, 7);
+
+        m.set(2_000, m_initial.get());
+        let store = STi::new(Word::new_instruction(2_000, 2, WordAccess::new(4, 4), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 7, 5);
+
+        m.set(2_000, m_initial.get());
+        let store = STi::new(Word::new_instruction(2_000, 2, WordAccess::new(5, 5), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 4, 7);
     }
 
     fn assert_by_bytes(

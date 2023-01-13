@@ -275,10 +275,7 @@ mod tests {
 
         let ri = r.get_i(2);
 
-        assert_ne!(ri.get_byte(0), 0, "ri sign is wrogn");
-        assert_eq!(ri.get_byte(1), 0, "ri byte 1 is wrong");
-        assert_eq!(ri.get_byte(2), 0, "ri byte 2 is wrong");
-        assert_eq!(ri.get_byte(3), 0, "ri byte 3 is wrong");
+        assert_eq!(ri.get_sign(), -1, "ri sign is wrogn");
         assert_eq!(ri.get_byte(4), 5, "ri byte 4 is wrong");
         assert_eq!(ri.get_byte(5), 4, "ri byte 5 is wrong");
     }
@@ -327,10 +324,7 @@ mod tests {
 
         let ri = r.get_i(2);
 
-        assert_eq!(ri.get_byte(0), 0, "ri sign is wrogn");
-        assert_eq!(ri.get_byte(1), 0, "ri byte 1 is wrong");
-        assert_eq!(ri.get_byte(2), 0, "ri byte 2 is wrong");
-        assert_eq!(ri.get_byte(3), 0, "ri byte 3 is wrong");
+        assert_eq!(ri.get_sign(), 0, "ri sign is wrogn");
         assert_eq!(ri.get_byte(4), 5, "ri byte 4 is wrong");
         assert_eq!(ri.get_byte(5), 4, "ri byte 5 is wrong");
     }
