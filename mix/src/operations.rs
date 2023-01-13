@@ -1,6 +1,6 @@
 pub mod load;
 pub mod store;
-// pub mod arithmetic;
+pub mod arithmetic;
 // pub mod address_transfer;
 // pub mod compare;
 // pub mod jump;

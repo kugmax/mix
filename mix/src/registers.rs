@@ -1,10 +1,19 @@
 use crate::memory::word::ShortWord;
 use crate::memory::word::Word;
 
+#[derive(Debug, Copy, Clone)]
+pub enum Comparison {
+    LESS,
+    EQUAL,
+    GREATHER,
+}
+
 pub struct Registers {
     a: Word,
     x: Word,
     j_i: [ShortWord; 7], // 0 = reg J, 1-6 reg I
+    is_overflow: bool,
+    comparison: Comparison,
 }
 
 impl Registers {
@@ -21,6 +30,8 @@ impl Registers {
                 ShortWord::new(0),
                 ShortWord::new(0),
             ],
+            is_overflow: false,
+            comparison: Comparison::EQUAL,
         }
     }
 
@@ -50,15 +61,31 @@ impl Registers {
 
     pub fn set_i(&mut self, i: usize, word: ShortWord) {
         if i < 1 || i > 6 {
-          panic!("{} wrong register I index", i)
+            panic!("{} wrong register I index", i)
         }
         self.j_i[i] = word;
     }
 
     pub fn get_i(&self, i: usize) -> ShortWord {
         if i < 1 || i > 6 {
-          panic!("{} wrong register I index", i)
+            panic!("{} wrong register I index", i)
         }
         self.j_i[i]
+    }
+
+    pub fn set_overflow(&mut self, is_overflow: bool) {
+        self.is_overflow = is_overflow;
+    }
+
+    pub fn is_overflow(&self) -> bool {
+        self.is_overflow
+    }
+
+    pub fn set_comparison(&mut self, comparison: Comparison) {
+        self.comparison = comparison;
+    }
+
+    pub fn get_comparison(&self) -> Comparison {
+        self.comparison
     }
 }

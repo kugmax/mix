@@ -38,6 +38,12 @@ impl Word {
         Word { value }
     }
 
+    pub fn new_from_signed(value: i32) -> Word {
+        let sign = Word::get_sign_mask_from_value(value);
+        let result = (value.abs() as u32) | sign;
+        Word { value: result }
+    }
+
     pub fn set(&mut self, value: u32) {
         self.value = value;
     }
@@ -77,6 +83,16 @@ impl Word {
             positive_value & !SIGN
         };
         result
+    }
+
+    pub fn get_signed_value(&self) -> i32 {
+        let positive_val = (self.value & !SIGN) as i32;
+
+        return if (self.value & SIGN) == 0 {
+            positive_val
+        } else {
+            -positive_val
+        };
     }
 
     pub fn get_sign_mask_from_value(value: i32) -> u32 {
@@ -164,7 +180,7 @@ impl Bytes for Word {
         result >>= 6 * (5 - byte_number);
         result as u8
     }
-    
+
     fn set_byte(&mut self, byte_number: u8, value: u8) {
         if byte_number < 1 || byte_number > 5 {
             panic!("{byte_number} is out of scope");
@@ -183,10 +199,16 @@ impl Bytes for Word {
         }
     }
 
-    fn set_sign(&mut self, sign:i8)  { 
+    fn set_sign(&mut self, sign: i8) {
         let value = Word::get_sign_mask_from_value(sign as i32);
         let result = self.value & !SIGN;
         self.value = value | result;
+    }
+}
+
+impl PartialEq for Word {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value 
     }
 }
 
@@ -241,7 +263,7 @@ impl Bytes for ShortWord {
         result >>= 6 * (5 - byte_number);
         result as u8
     }
-    
+
     fn set_byte(&mut self, byte_number: u8, value: u8) {
         if byte_number < 1 || byte_number > 5 {
             panic!("{byte_number} is out of scope");
@@ -261,7 +283,7 @@ impl Bytes for ShortWord {
         }
     }
 
-    fn set_sign(&mut self, sign:i8)  { 
+    fn set_sign(&mut self, sign: i8) {
         let value = Word::get_sign_mask_from_value(sign as i32);
         let result = self.value & !SIGN;
         self.value = value | result;
@@ -570,16 +592,16 @@ mod tests {
 
         w.set_byte(1, 9);
         assert_eq!(9, w.get_byte(1));
-        
+
         w.set_byte(2, 8);
         assert_eq!(8, w.get_byte(2));
-        
+
         w.set_byte(3, 7);
         assert_eq!(7, w.get_byte(3));
 
         w.set_byte(4, 6);
         assert_eq!(6, w.get_byte(4));
-        
+
         w.set_byte(5, 10);
         assert_eq!(10, w.get_byte(5));
 
