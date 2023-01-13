@@ -112,7 +112,6 @@ impl STi {
         to.set_byte(2, 0);
         to.set_byte(3, 0);
 
-
         for i in 0..f.right - f.left + 1 {
             let b_from = 5 - i;
             let b_to = f.right - i;
@@ -126,6 +125,60 @@ impl STi {
             to.set_sign(from.get_sign());
         }
 
+        mem.set(addr, to.get());
+    }
+}
+
+struct STJ {
+    code: u32,
+    execution_time: u32,
+
+    instruction: Word,
+}
+
+impl STJ {
+    pub fn new(instruction: Word) -> STJ {
+        STJ {
+            code: 32 as u32,
+            execution_time: 2,
+            instruction,
+        }
+    }
+
+    pub fn execute(&self, mem: &mut Memory, reg: &Registers) {
+        let addr = self.instruction.get_address();
+        let addr = addr.abs() as usize;
+
+        let is_set_sign = self.instruction.get_f().left == 0;
+        let mut left = self.instruction.get_f().left;
+        let mut right = self.instruction.get_f().right;
+
+        if left < 4 {
+            left += 3;
+        }
+
+        if right < 4 {
+            right += 3;
+        }
+
+        let from = reg.get_j();
+        let mut to = mem.get(addr);
+        to.set_byte(1, 0);
+        to.set_byte(2, 0);
+        to.set_byte(3, 0);
+
+        for i in 0..right - left + 1 {
+            let b_from = 5 - i;
+            let b_to = right - i;
+            if b_from == 0 || b_to == 0 {
+                continue;
+            }
+            to.set_byte(b_to, from.get_byte(b_from));
+        }
+
+        if is_set_sign {
+            to.set_sign(from.get_sign());
+        }
         mem.set(addr, to.get());
     }
 }
@@ -266,6 +319,37 @@ mod tests {
 
         m.set(2_000, m_initial.get());
         let store = STi::new(Word::new_instruction(2_000, 2, WordAccess::new(5, 5), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 4, 7);
+    }
+
+    #[test]
+    fn stj() {
+        let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
+        let r_initial = ShortWord::new_by_bytes(0, &[6, 7]);
+
+        let mut m = Memory::new();
+
+        let mut r = Registers::new();
+        r.set_j(r_initial);
+
+        m.set(2_000, m_initial.get());
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 2), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), 0, 0, 0, 0, 6, 7);
+
+        m.set(2_000, m_initial.get());
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(1, 2), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 6, 7);
+
+        m.set(2_000, m_initial.get());
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(1, 1), 24));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 7, 5);
+
+        m.set(2_000, m_initial.get());
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(2, 2), 24));
         store.execute(&mut m, &r);
         assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 4, 7);
     }
