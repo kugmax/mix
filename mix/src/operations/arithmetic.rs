@@ -8,31 +8,18 @@ use crate::registers::Registers;
 
 const MAX_5_BYTES: i32 = 1_073_741_823;
 
-struct ADD {
-    code: u32,
-    execution_time: u32,
+trait SumOperation {
+    fn execute(&self, mem: &Memory, reg: &mut Registers);
 
-    instruction: Word,
-}
-
-impl ADD {
-    pub fn new(instruction: Word) -> ADD {
-        ADD {
-            code: 1,
-            execution_time: 2,
-            instruction: instruction,
-        }
-    }
-
-    pub fn execute(&self, mem: &Memory, reg: &mut Registers) {
-        let addr = self.instruction.get_address();
+    fn sum(instruction: impl Instruction, sum: &mut dyn Fn(i32, i32) -> i32, mem: &Memory, reg: &mut Registers) {
+        let addr = instruction.get_address();
         let addr = addr.abs();
 
         let mem_cell = mem.get(addr as usize);
 
         let value: i32 =
-            Word::new(mem_cell.get_by_access(self.instruction.get_f())).get_signed_value();
-        let result: i32 = reg.get_a().get_signed_value() + value;
+            Word::new(mem_cell.get_by_access(instruction.get_f())).get_signed_value();
+        let result: i32 = sum(reg.get_a().get_signed_value(), value);
 
         if result == 0 {
             // reg.set_overflow(false); //TODO: how to clean overflow flag ?
@@ -50,6 +37,30 @@ impl ADD {
 
         reg.set_overflow(true);
         reg.set_a(Word::new(0));//TODO: the behaviour have to be different
+    }
+} 
+
+struct ADD {
+    code: u32,
+    execution_time: u32,
+
+    instruction: Word,
+}
+
+impl ADD {
+    pub fn new(instruction: Word) -> ADD {
+        ADD {
+            code: 1,
+            execution_time: 2,
+            instruction: instruction,
+        }
+    }
+}
+
+impl SumOperation for ADD {
+    fn execute(&self, mem: &Memory, reg: &mut Registers) {
+        let mut sum = |v1, v2| v1 + v2;
+        <ADD as SumOperation>::sum(self.instruction, &mut sum, mem, reg);
     }
 }
 
@@ -68,33 +79,12 @@ impl SUB {
             instruction: instruction,
         }
     }
+}
 
-    pub fn execute(&self, mem: &Memory, reg: &mut Registers) {
-        let addr = self.instruction.get_address();
-        let addr = addr.abs();
-
-        let mem_cell = mem.get(addr as usize);
-
-        let value: i32 =
-            Word::new(mem_cell.get_by_access(self.instruction.get_f())).get_signed_value();
-        let result: i32 = reg.get_a().get_signed_value() - value;
-
-        if result == 0 {
-            // reg.set_overflow(false); //TODO: how to clean overflow flag ?
-            let mut result = Word::new(0);
-            result.set_sign(reg.get_a().get_sign());
-            reg.set_a(result);
-            return;
-        }
-
-        if result >= -MAX_5_BYTES && result <= MAX_5_BYTES {
-            // reg.set_overflow(false); //TODO: how to clean overflow flag ?
-            reg.set_a(Word::new_from_signed(result));
-            return;
-        }
-
-        reg.set_overflow(true);
-        reg.set_a(Word::new(0));//TODO: the behaviour have to be different
+impl SumOperation for SUB {
+    fn execute(&self, mem: &Memory, reg: &mut Registers) {
+        let mut sub = |v1, v2| v1 - v2;
+        <SUB as SumOperation>::sum(self.instruction, &mut sub, mem, reg);
     }
 }
 
