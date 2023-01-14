@@ -1,3 +1,5 @@
+const ABS: u32 = 0b00_111111_111111_111111_111111_111111;
+
 const SIGN: u32 = 0b10_000000_000000_000000_000000_000000;
 const BYTE_1: u32 = 0b00_111111_000000_000000_000000_000000;
 const BYTE_2: u32 = 0b00_000000_111111_000000_000000_000000;
@@ -6,6 +8,9 @@ const BYTE_4: u32 = 0b00_000000_000000_000000_111111_000000;
 const BYTE_5: u32 = 0b00_000000_000000_000000_000000_111111;
 
 const BYTES: [u32; 6] = [SIGN, BYTE_1, BYTE_2, BYTE_3, BYTE_4, BYTE_5];
+
+pub const MAX_5_BYTES: i32 = 1_073_741_823;
+pub const MAX_10_BYTES: i64 = 0b0000_111111_111111_111111_111111_111111_111111_111111_111111_111111_111111;
 
 pub trait Instruction {
     fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word;
@@ -42,6 +47,22 @@ impl Word {
         let sign = Word::get_sign_mask_from_value(value);
         let result = (value.abs() as u32) | sign;
         Word { value: result }
+    }
+
+    pub fn split(value: i64) -> (Word, Word) {
+        let sign = if value > 0 {0} else {SIGN};
+        let value = value.abs();
+
+        let l_value = (value >> 30) as u32;
+        let r_value = (value & (MAX_5_BYTES as i64)) as u32;
+
+        let l_value = (l_value & ABS) | sign;
+        let r_value = (r_value & ABS) | sign;
+
+        (
+            Word::new(l_value),
+            Word::new(r_value),
+        )
     }
 
     pub fn set(&mut self, value: u32) {
@@ -208,7 +229,7 @@ impl Bytes for Word {
 
 impl PartialEq for Word {
     fn eq(&self, other: &Self) -> bool {
-        self.value == other.value 
+        self.value == other.value
     }
 }
 
@@ -622,5 +643,40 @@ mod tests {
         assert_eq!(2, w.get_i());
         assert_eq!(11, w.get_f().spec);
         assert_eq!(8, w.get_c());
+    }
+
+    #[test]
+    fn word_split() {
+        let value: i64 =
+             0b0000_000000_000000_000000_000000_000001_000000_000000_000000_000000_000001;
+        let (r, l) = Word::split(value);
+        assert_eq!(r, l);
+
+        let value: i64 =
+             -0b0000_000000_000000_000000_000000_000001_000000_000000_000000_000000_000001;
+        let (r, l) = Word::split(value);
+        assert_eq!(r, l);
+
+        let value: i64 =
+             0b0000_111111_111111_111111_111111_111111_111111_111111_111111_111111_111111;
+        let (r, l) = Word::split(value);
+        assert_eq!(r, l);
+
+        let value: i64 =
+             -0b0000_111111_111111_111111_111111_111111_111111_111111_111111_111111_111111;
+        let (r, l) = Word::split(value);
+        assert_eq!(r, l);
+
+        let value: i64 =
+             0b0000_100000_000000_000100_000010_000001_100000_011000_000000_000000_000001;
+        let (l, r) = Word::split(value);
+        assert_eq!(0b00_100000_000000_000100_000010_000001, l.get());
+        assert_eq!(0b00_100000_011000_000000_000000_000001, r.get());
+
+        let value: i64 =
+             -0b0000_100000_000000_000100_000010_000001_100000_011000_000000_000000_000001;
+        let (l, r) = Word::split(value);
+        assert_eq!(0b10_100000_000000_000100_000010_000001, l.get());
+        assert_eq!(0b10_100000_011000_000000_000000_000001, r.get());
     }
 }

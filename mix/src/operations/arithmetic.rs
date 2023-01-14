@@ -5,20 +5,22 @@ use crate::memory::word::Word;
 use crate::memory::word::WordAccess;
 use crate::memory::Memory;
 use crate::registers::Registers;
-
-const MAX_5_BYTES: i32 = 1_073_741_823;
+use crate::memory::word::MAX_5_BYTES;
 
 trait SumOperation {
     fn execute(&self, mem: &Memory, reg: &mut Registers);
 
-    fn sum(instruction: impl Instruction, sum: &mut dyn Fn(i32, i32) -> i32, mem: &Memory, reg: &mut Registers) {
+    fn sum(
+        instruction: impl Instruction,
+        sum: &mut dyn Fn(i32, i32) -> i32,
+        mem: &Memory,
+        reg: &mut Registers,
+    ) {
         let addr = instruction.get_address();
         let addr = addr.abs();
-
         let mem_cell = mem.get(addr as usize);
 
-        let value: i32 =
-            Word::new(mem_cell.get_by_access(instruction.get_f())).get_signed_value();
+        let value: i32 = Word::new(mem_cell.get_by_access(instruction.get_f())).get_signed_value();
         let result: i32 = sum(reg.get_a().get_signed_value(), value);
 
         if result == 0 {
@@ -29,16 +31,16 @@ trait SumOperation {
             return;
         }
 
-        if result >= -MAX_5_BYTES && result <= MAX_5_BYTES {
+        if result >= -MAX_5_BYTES && result <=MAX_5_BYTES {
             // reg.set_overflow(false); //TODO: how to clean overflow flag ?
             reg.set_a(Word::new_from_signed(result));
             return;
         }
 
         reg.set_overflow(true);
-        reg.set_a(Word::new(0));//TODO: the behaviour have to be different
+        reg.set_a(Word::new(0)); //TODO: the behaviour have to be different
     }
-} 
+}
 
 struct ADD {
     code: u32,
@@ -88,6 +90,37 @@ impl SumOperation for SUB {
     }
 }
 
+struct MUL {
+    code: u32,
+    execution_time: u32,
+
+    instruction: Word,
+}
+
+impl MUL {
+    pub fn new(instruction: Word) -> MUL {
+        MUL {
+            code: 3,
+            execution_time: 10,
+            instruction: instruction,
+        }
+    }
+
+    fn execute(&self, mem: &Memory, reg: &mut Registers) {
+        let addr = self.instruction.get_address();
+        let addr = addr.abs();
+        let mem_cell = mem.get(addr as usize);
+
+        let value: i64 =
+            Word::new(mem_cell.get_by_access(self.instruction.get_f())).get_signed_value() as i64;
+        let result: i64 = reg.get_a().get_signed_value() as i64 * value;
+
+        let (a, x) = Word::split(result);
+        reg.set_a(a);
+        reg.set_x(x);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -130,7 +163,7 @@ mod tests {
         assert_eq!(r.get_a(), Word::new_from_signed(0));
         assert_eq!(r.is_overflow(), false);
     }
-    
+
     #[test]
     fn add_result_is_0() {
         let mut m = Memory::new();
@@ -202,7 +235,7 @@ mod tests {
         assert_eq!(r.is_overflow(), true);
         assert_eq!(r.get_a(), Word::new(0));
     }
-    
+
     #[test]
     fn sub() {
         let mut m = Memory::new();
@@ -240,5 +273,28 @@ mod tests {
         operation.execute(&m, &mut r);
         assert_eq!(r.get_a(), Word::new_from_signed(0));
         assert_eq!(r.is_overflow(), false);
+    }
+
+    #[test]
+    fn mul() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        m.set(3_000, Word::new_from_signed(MAX_5_BYTES).get());
+        r.set_a(Word::new_from_signed(MAX_5_BYTES));
+          
+        let operation = MUL::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3));
+        operation.execute(&m, &mut r);
+        assert_eq!(0b00_111111_111111_111111_111111_111110, r.get_a().get());
+        assert_eq!(0b00_000000_000000_000000_000000_000001, r.get_x().get());
+        
+        r.set_a(Word::new_from_signed(-MAX_5_BYTES));
+        let operation = MUL::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3));
+        operation.execute(&m, &mut r);
+        assert_eq!(0b10_111111_111111_111111_111111_111110, r.get_a().get());
+        assert_eq!(0b10_000000_000000_000000_000000_000001, r.get_x().get());
+
+        // println!("rA {:#034b}", r.get_a().get());
+        // println!("rX {:#034b}", r.get_x().get());
     }
 }
