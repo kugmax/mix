@@ -3,9 +3,9 @@ use crate::memory::word::Instruction;
 use crate::memory::word::ShortWord;
 use crate::memory::word::Word;
 use crate::memory::word::WordAccess;
+use crate::memory::word::MAX_5_BYTES;
 use crate::memory::Memory;
 use crate::registers::Registers;
-use crate::memory::word::MAX_5_BYTES;
 
 trait SumOperation {
     fn execute(&self, mem: &Memory, reg: &mut Registers);
@@ -31,7 +31,7 @@ trait SumOperation {
             return;
         }
 
-        if result >= -MAX_5_BYTES && result <=MAX_5_BYTES {
+        if result >= -MAX_5_BYTES && result <= MAX_5_BYTES {
             // reg.set_overflow(false); //TODO: how to clean overflow flag ?
             reg.set_a(Word::new_from_signed(result));
             return;
@@ -118,6 +118,53 @@ impl MUL {
         let (a, x) = Word::split(result);
         reg.set_a(a);
         reg.set_x(x);
+    }
+}
+
+struct DIV {
+    code: u32,
+    execution_time: u32,
+
+    instruction: Word,
+}
+
+impl DIV {
+    pub fn new(instruction: Word) -> DIV {
+        DIV {
+            code: 4,
+            execution_time: 12,
+            instruction: instruction,
+        }
+    }
+
+    fn execute(&self, mem: &Memory, reg: &mut Registers) {
+        let addr = self.instruction.get_address();
+        let addr = addr.abs();
+        let mem_cell = mem.get(addr as usize);
+
+        let value = Word::new(mem_cell.get_by_access(self.instruction.get_f())).get_signed_value();
+
+        if value == 0 || reg.get_a().get_signed_value().abs() >= value.abs() {
+            reg.set_overflow(true);
+            reg.set_a(Word::new(0));
+            reg.set_x(Word::new(0));
+            return;
+        }
+
+        let value: i64 = value as i64;
+
+        let old_ra_sign = reg.get_a().get_sign();
+        let r_ax: i64 = Word::unite(reg.get_a().get(), reg.get_x().get());
+
+        let quotient: i64 = r_ax / value;
+        let reminder: i64 = r_ax % value;
+
+        let quotient = Word::new_from_signed(quotient as i32);
+        let mut reminder = Word::new_from_signed(reminder as i32);
+        reminder.set_sign(old_ra_sign);
+
+        reg.set_a(quotient);
+        reg.set_x(reminder);
     }
 }
 
@@ -282,12 +329,12 @@ mod tests {
 
         m.set(3_000, Word::new_from_signed(MAX_5_BYTES).get());
         r.set_a(Word::new_from_signed(MAX_5_BYTES));
-          
+
         let operation = MUL::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3));
         operation.execute(&m, &mut r);
         assert_eq!(0b00_111111_111111_111111_111111_111110, r.get_a().get());
         assert_eq!(0b00_000000_000000_000000_000000_000001, r.get_x().get());
-        
+
         r.set_a(Word::new_from_signed(-MAX_5_BYTES));
         let operation = MUL::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3));
         operation.execute(&m, &mut r);
@@ -296,5 +343,58 @@ mod tests {
 
         // println!("rA {:#034b}", r.get_a().get());
         // println!("rX {:#034b}", r.get_x().get());
+    }
+
+    #[test]
+    fn div() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        m.set(3_000, Word::new_from_signed(2).get());
+        r.set_a(Word::new(0));
+        r.set_x(Word::new(10));
+
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
+        operation.execute(&m, &mut r);
+        assert_eq!(5, r.get_a().get());
+        assert_eq!(0, r.get_x().get());
+
+        m.set(3_000, Word::new_from_signed(-2).get());
+        r.set_a(Word::new(0));
+        r.set_x(Word::new(10));
+
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
+        operation.execute(&m, &mut r);
+        assert_eq!(0b10_000000_000000_000000_000000_000101, r.get_a().get());
+        assert_eq!(0b00_000000_000000_000000_000000_000000, r.get_x().get());
+
+        m.set(3_000, Word::new_from_signed(-2).get());
+        r.set_a(Word::new_from_signed(-1));
+        r.set_x(Word::new(11));
+
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
+        operation.execute(&m, &mut r);
+        assert_eq!(0b00_100000_000000_000000_000000_000101, r.get_a().get());
+        assert_eq!(0b10_000000_000000_000000_000000_000001, r.get_x().get());
+
+        m.set(3_000, Word::new_from_signed(0).get());
+        r.set_a(Word::new_from_signed(-1));
+        r.set_x(Word::new(11));
+
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
+        operation.execute(&m, &mut r);
+        assert_eq!(true, r.is_overflow());
+        assert_eq!(0, r.get_a().get());
+        assert_eq!(0, r.get_x().get());
+
+        m.set(3_000, Word::new_from_signed(-1).get());
+        r.set_a(Word::new_from_signed(-2));
+        r.set_x(Word::new(0));
+
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
+        operation.execute(&m, &mut r);
+        assert_eq!(true, r.is_overflow());
+        assert_eq!(0, r.get_a().get());
+        assert_eq!(0, r.get_x().get());
     }
 }
