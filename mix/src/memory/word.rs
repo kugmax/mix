@@ -30,6 +30,18 @@ pub trait Bytes {
     fn set_byte(&mut self, byte_number: u8, value: u8);
     fn get_sign(&self) -> i8; // 0 or -1
     fn set_sign(&mut self, sign: i8); // 0 or -1
+                                      //
+    fn set_bytes(&mut self, byte_numbes: &[u8], value: u32);
+    fn get_bytes(&self, byte_numbes: &[u8]) -> u32;
+
+    // fn extract_byte(byte_number: u8, value: u32) -> u8 {
+        // let tmp = value & BYTES[byte_number as usize];
+        // println!("tmp1 {:#034b}", tmp);
+//
+        // let tmp = tmp >> 6 * (5 - byte_number);
+        // println!("tmp2 {:#034b}", tmp);
+        // tmp as u8
+    // }
 }
 
 /// Word: 5 bytes and +- sign
@@ -221,6 +233,26 @@ impl Bytes for Word {
         self.value = value | result;
     }
 
+    fn set_bytes(&mut self, byte_numbers: &[u8], value: u32) {
+        let right_byte = byte_numbers[byte_numbers.len() - 1];
+        let result = value << 6 * (5 - right_byte);
+        self.value |= result;
+    }
+
+    fn get_bytes(&self, byte_numbers: &[u8]) -> u32 {
+        let mut result: u32 = 0;
+        let mut first_byte = false;
+        for b in byte_numbers {
+            if first_byte == false {
+                first_byte = true;
+            } else {
+                result <<= 6;
+            }
+            result |= self.get_byte(*b) as u32;
+        }
+        result
+    }
+
     fn get_sign(&self) -> i8 {
         if self.value & SIGN == 0 {
             0
@@ -303,6 +335,16 @@ impl Bytes for ShortWord {
         let value = value << 6 * (5 - byte_number);
         let result = self.value & !BYTES[byte_number as usize];
         self.value = value | result;
+    }
+
+    fn set_bytes(&mut self, byte_numbers: &[u8], value: u32) {
+        // for b in byte_numbers {
+        // self.set_byte(*b, value & BYTES[*b as usize]);
+        // }
+    }
+
+    fn get_bytes(&self, byte_numbes: &[u8]) -> u32 {
+        0
     }
 
     fn get_sign(&self) -> i8 {
@@ -614,7 +656,7 @@ mod tests {
     }
 
     #[test]
-    fn word_get_set_bytes() {
+    fn word_get_set_byte() {
         let mut w = Word::new_by_bytes(0, &[1, 2, 3, 4, 5]);
 
         w.set_sign(-1);
@@ -726,7 +768,7 @@ mod tests {
             -0b0000_111111_111111_111111_111111_111111_111111_111111_111111_111111_111111,
             united
         );
-        
+
         let united = Word::unite(
             0b00_100000_000000_000100_000010_000001,
             0b10_100000_011000_000000_000000_000001,
@@ -744,5 +786,26 @@ mod tests {
             -0b0000_100000_000000_000100_000010_000001_100000_011000_000000_000000_000001,
             united
         );
+    }
+
+    #[test]
+    fn word_get_set_bytes() {
+        let mut w = Word::new(0);
+        w.set_bytes(&[1, 2], 1234);
+        w.set_bytes(&[3], 1);
+        w.set_bytes(&[4, 5], 150);
+
+        assert_eq!(1234, w.get_bytes(&[1, 2]));
+        assert_eq!(1, w.get_bytes(&[3]));
+        assert_eq!(150, w.get_bytes(&[4, 5]));
+
+        let mut w = Word::new(0);
+        w.set_bytes(&[1, 2], 2000);
+        w.set_bytes(&[3,4], 150);
+        w.set_bytes(&[5], 0);
+
+        assert_eq!(2000, w.get_bytes(&[1, 2]));
+        assert_eq!(150, w.get_bytes(&[3,4]));
+        assert_eq!(0, w.get_bytes(&[5]));
     }
 }

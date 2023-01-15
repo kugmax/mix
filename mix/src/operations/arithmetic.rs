@@ -397,4 +397,223 @@ mod tests {
         assert_eq!(0, r.get_a().get());
         assert_eq!(0, r.get_x().get());
     }
+
+    #[test]
+    fn arithmetic_instructions_1() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        let mut ra = Word::new(0);
+        ra.set_bytes(&[1, 2], 1234);
+        ra.set_bytes(&[3], 1);
+        ra.set_bytes(&[4, 5], 150);
+
+        r.set_a(ra);
+        r.set_x(Word::new(0));
+
+        let mut cell = Word::new(0);
+        cell.set_bytes(&[1, 2], 100);
+        cell.set_bytes(&[3], 5);
+        cell.set_bytes(&[4, 5], 50);
+
+        m.set(1_000, cell.get());
+
+        let op = ADD::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
+        op.execute(&mut m, &mut r);
+
+        let mut ra = r.get_a();
+        assert_eq!(1334, ra.get_bytes(&[1, 2]));
+        assert_eq!(6, ra.get_bytes(&[3]));
+        assert_eq!(200, ra.get_bytes(&[4, 5]));
+    }
+
+    #[test]
+    fn arithmetic_instructions_2() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        let mut ra = Word::new(0);
+        ra.set_bytes(&[1, 2], 1234);
+        ra.set_bytes(&[3], 0);
+        ra.set_bytes(&[4], 0);
+        ra.set_bytes(&[5], 9);
+        ra.set_sign(-1);
+
+        r.set_a(ra);
+        r.set_x(Word::new(0));
+
+        let mut cell = Word::new(0);
+        cell.set_bytes(&[1, 2], 2000);
+        cell.set_bytes(&[3, 4], 150);
+        cell.set_bytes(&[5], 0);
+        cell.set_sign(-1);
+
+        m.set(1_000, cell.get());
+
+        let op = SUB::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
+        op.execute(&mut m, &mut r);
+
+        let mut ra = r.get_a();
+        assert_eq!(0, ra.get_sign());
+        assert_eq!(766, ra.get_bytes(&[1, 2]));
+        assert_eq!(149, ra.get_bytes(&[3, 4]));
+        // assert_eq!(0, ra.get_bytes(&[5]));
+    }
+
+    #[test]
+    fn arithmetic_instructions_3() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        let ra = Word::new_by_bytes(0, &[1, 1, 1, 1, 1]);
+
+        r.set_a(ra);
+        r.set_x(Word::new(0));
+
+        let cell = Word::new_by_bytes(0, &[1, 1, 1, 1, 1]);
+
+        m.set(1_000, cell.get());
+
+        let op = MUL::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
+        op.execute(&mut m, &mut r);
+
+        let ra = r.get_a();
+        assert_eq!(0, ra.get_sign());
+        assert_eq!(0, ra.get_byte(1));
+        assert_eq!(1, ra.get_byte(2));
+        assert_eq!(2, ra.get_byte(3));
+        assert_eq!(3, ra.get_byte(4));
+        assert_eq!(4, ra.get_byte(5));
+
+        let rx = r.get_x();
+        assert_eq!(0, rx.get_sign());
+        assert_eq!(5, rx.get_byte(1));
+        assert_eq!(4, rx.get_byte(2));
+        assert_eq!(3, rx.get_byte(3));
+        assert_eq!(2, rx.get_byte(4));
+        assert_eq!(1, rx.get_byte(5));
+    }
+
+    #[test]
+    fn arithmetic_instructions_4() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        let ra = Word::new_from_signed(-112);
+
+        r.set_a(ra);
+        r.set_x(Word::new(0));
+
+        let cell = Word::new_by_bytes(0, &[2, 1, 1, 1, 1]);
+
+        m.set(1_000, cell.get());
+
+        let op = MUL::new(Word::new_instruction(1_000, 0, WordAccess::new(1, 1), 0));
+        op.execute(&mut m, &mut r);
+
+        let ra = r.get_a();
+        assert_eq!(-1, ra.get_sign());
+        assert_eq!(0, ra.get_signed_value());
+
+        let rx = r.get_x();
+        assert_eq!(-224, rx.get_signed_value());
+    }
+
+    #[test]
+    fn arithmetic_instructions_5() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        let mut ra = Word::new(0);
+        ra.set_bytes(&[1], 50);
+        ra.set_bytes(&[2], 0);
+        ra.set_bytes(&[3, 4], 112);
+        ra.set_bytes(&[5], 4);
+        ra.set_sign(-1);
+
+        r.set_a(ra);
+        r.set_x(Word::new(0));
+
+        let cell = Word::new_by_bytes(-1, &[2, 0, 0, 0, 0]);
+
+        m.set(1_000, cell.get());
+
+        let op = MUL::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
+        op.execute(&mut m, &mut r);
+
+        let mut ra = r.get_a();
+        assert_eq!(0, ra.get_sign());
+        assert_eq!(100, ra.get_bytes(&[1, 2]));
+        assert_eq!(0, ra.get_bytes(&[3]));
+        assert_eq!(224, ra.get_bytes(&[4, 5]));
+
+        let rx = r.get_x();
+        assert_eq!(0, rx.get_sign());
+        assert_eq!(8, rx.get_byte(1));
+        assert_eq!(0, rx.get_byte(2));
+        assert_eq!(0, rx.get_byte(3));
+        assert_eq!(0, rx.get_byte(4));
+        assert_eq!(0, rx.get_byte(5));
+    }
+
+    #[test]
+    fn arithmetic_instructions_6() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        let mut ra = Word::new(0);
+
+        r.set_a(ra);
+        r.set_x(Word::new(17));
+
+        let cell = Word::new(3);
+
+        m.set(1_000, cell.get());
+
+        let op = DIV::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
+        op.execute(&mut m, &mut r);
+
+        let ra = r.get_a();
+        assert_eq!(0, ra.get_sign());
+        assert_eq!(5, ra.get());
+
+        let rx = r.get_x();
+        assert_eq!(0, rx.get_sign());
+        assert_eq!(2, rx.get());
+    }
+
+    #[test]
+    fn arithmetic_instructions_7() {
+        let mut m = Memory::new();
+        let mut r = Registers::new();
+
+        let mut ra = Word::new(0);
+        ra.set_sign(-1);
+
+        r.set_a(ra);
+
+        let mut rx = Word::new(0);
+        rx.set_bytes(&[1,2], 1235);
+        rx.set_bytes(&[3], 0);
+        rx.set_bytes(&[4], 3);
+        rx.set_bytes(&[5], 1);
+
+        r.set_x(rx);
+
+        let cell = Word::new_by_bytes(-1, &[0, 0, 0, 2, 0]);
+
+        m.set(1_000, cell.get());
+
+        let op = DIV::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
+        op.execute(&mut m, &mut r);
+
+        let ra = r.get_a();
+        assert_eq!(0, ra.get_sign());
+        assert_eq!(0, ra.get_bytes(&[1]));
+        assert_eq!(617, ra.get_bytes(&[2,3]));
+
+        let rx = r.get_x();
+        assert_eq!(-1, rx.get_sign());
+        assert_eq!(1, rx.get_byte(5));
+    }
 }
