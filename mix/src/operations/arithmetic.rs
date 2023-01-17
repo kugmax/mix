@@ -6,6 +6,7 @@ use crate::memory::word_access::WordAccess;
 use crate::memory::word::MAX_5_BYTES;
 use crate::memory::Memory;
 use crate::registers::Registers;
+use crate::operations::get_memory_cell;
 
 trait SumOperation {
     fn execute(&self, mem: &Memory, reg: &mut Registers);
@@ -16,11 +17,10 @@ trait SumOperation {
         mem: &Memory,
         reg: &mut Registers,
     ) {
-        let addr = instruction.get_address();
-        let addr = addr.abs();
-        let mem_cell = mem.get(addr as usize);
-
-        let value: i32 = Word::new(mem_cell.get_by_access(instruction.get_f())).get_signed_value();
+        let f = instruction.get_f();
+        let mem_cell = get_memory_cell(instruction, mem, reg);
+          
+        let value: i32 = Word::new(mem_cell.get_by_access(f)).get_signed_value();
         let result: i32 = sum(reg.get_a().get_signed_value(), value);
 
         if result == 0 {
@@ -107,12 +107,11 @@ impl MUL {
     }
 
     fn execute(&self, mem: &Memory, reg: &mut Registers) {
-        let addr = self.instruction.get_address();
-        let addr = addr.abs();
-        let mem_cell = mem.get(addr as usize);
+        let f = self.instruction.get_f();
+        let mem_cell = get_memory_cell(self.instruction, mem, reg);
 
         let value: i64 =
-            Word::new(mem_cell.get_by_access(self.instruction.get_f())).get_signed_value() as i64;
+            Word::new(mem_cell.get_by_access(f)).get_signed_value() as i64;
         let result: i64 = reg.get_a().get_signed_value() as i64 * value;
 
         let (a, x) = Word::split(result);
@@ -138,11 +137,10 @@ impl DIV {
     }
 
     fn execute(&self, mem: &Memory, reg: &mut Registers) {
-        let addr = self.instruction.get_address();
-        let addr = addr.abs();
-        let mem_cell = mem.get(addr as usize);
+        let f = self.instruction.get_f();
+        let mem_cell = get_memory_cell(self.instruction, mem, reg);
 
-        let value = Word::new(mem_cell.get_by_access(self.instruction.get_f())).get_signed_value();
+        let value = Word::new(mem_cell.get_by_access(f)).get_signed_value();
 
         if value == 0 || reg.get_a().get_signed_value().abs() >= value.abs() {
             reg.set_overflow(true);
