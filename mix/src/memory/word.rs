@@ -1,48 +1,21 @@
-const ABS: u32 = 0b00_111111_111111_111111_111111_111111;
+use crate::memory::Instruction;
+use crate::memory::Bytes;
+use crate::memory::word_access::WordAccess;
 
-const SIGN: u32 = 0b10_000000_000000_000000_000000_000000;
-const BYTE_1: u32 = 0b00_111111_000000_000000_000000_000000;
-const BYTE_2: u32 = 0b00_000000_111111_000000_000000_000000;
-const BYTE_3: u32 = 0b00_000000_000000_111111_000000_000000;
-const BYTE_4: u32 = 0b00_000000_000000_000000_111111_000000;
-const BYTE_5: u32 = 0b00_000000_000000_000000_000000_111111;
+pub const ABS: u32 = 0b00_111111_111111_111111_111111_111111;
 
-const BYTES: [u32; 6] = [SIGN, BYTE_1, BYTE_2, BYTE_3, BYTE_4, BYTE_5];
+pub const SIGN: u32 = 0b10_000000_000000_000000_000000_000000;
+pub const BYTE_1: u32 = 0b00_111111_000000_000000_000000_000000;
+pub const BYTE_2: u32 = 0b00_000000_111111_000000_000000_000000;
+pub const BYTE_3: u32 = 0b00_000000_000000_111111_000000_000000;
+pub const BYTE_4: u32 = 0b00_000000_000000_000000_111111_000000;
+pub const BYTE_5: u32 = 0b00_000000_000000_000000_000000_111111;
+
+pub const BYTES: [u32; 6] = [SIGN, BYTE_1, BYTE_2, BYTE_3, BYTE_4, BYTE_5];
 
 pub const MAX_5_BYTES: i32 = 1_073_741_823;
 pub const MAX_10_BYTES: i64 =
     0b0000_111111_111111_111111_111111_111111_111111_111111_111111_111111_111111;
-
-pub trait Instruction {
-    fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word;
-
-    fn get_address(&self) -> i32;
-    fn get_i(&self) -> u8;
-    fn get_f(&self) -> WordAccess;
-    fn get_c(&self) -> u8;
-}
-
-pub trait Bytes {
-    type Item;
-
-    fn new_by_bytes(sign: i8, bytes: &[u8]) -> Self::Item;
-    fn get_byte(&self, byte_number: u8) -> u8;
-    fn set_byte(&mut self, byte_number: u8, value: u8);
-    fn get_sign(&self) -> i8; // 0 or -1
-    fn set_sign(&mut self, sign: i8); // 0 or -1
-                                      //
-    fn set_bytes(&mut self, byte_numbes: &[u8], value: u32);
-    fn get_bytes(&self, byte_numbes: &[u8]) -> u32;
-
-    // fn extract_byte(byte_number: u8, value: u32) -> u8 {
-        // let tmp = value & BYTES[byte_number as usize];
-        // println!("tmp1 {:#034b}", tmp);
-//
-        // let tmp = tmp >> 6 * (5 - byte_number);
-        // println!("tmp2 {:#034b}", tmp);
-        // tmp as u8
-    // }
-}
 
 /// Word: 5 bytes and +- sign
 /// byte is 6 bits from 0-63
@@ -274,148 +247,9 @@ impl PartialEq for Word {
     }
 }
 
-/// ShortWord: 2 bytes (BYTE_4,BYTE_5) and +- sign
-/// byte is 6 bits from 0-63
-#[derive(Debug, Copy, Clone)]
-pub struct ShortWord {
-    value: u32,
-}
-
-impl ShortWord {
-    pub fn new(value: u32) -> ShortWord {
-        ShortWord {
-            value: ShortWord::to_short_value(value),
-        }
-    }
-
-    pub fn set(&mut self, value: u32) {
-        self.value = ShortWord::to_short_value(value);
-    }
-
-    pub fn get(&self) -> u32 {
-        self.value
-    }
-
-    fn to_short_value(value: u32) -> u32 {
-        value & (SIGN | BYTE_4 | BYTE_5)
-    }
-}
-
-impl Bytes for ShortWord {
-    type Item = ShortWord;
-
-    fn new_by_bytes(sign: i8, bytes: &[u8]) -> ShortWord {
-        let value = bytes[0] as u32;
-
-        let value = value << 6;
-        let value = value | bytes[1] as u32;
-
-        let value = value | Word::get_sign_mask_from_value(sign as i32);
-
-        ShortWord { value }
-    }
-
-    fn get_byte(&self, byte_number: u8) -> u8 {
-        if byte_number < 1 || byte_number > 5 {
-            panic!("{byte_number} is out of scope");
-        }
-
-        let byte_number = byte_number;
-        let mut result = self.value & BYTES[byte_number as usize];
-        result >>= 6 * (5 - byte_number);
-        result as u8
-    }
-
-    fn set_byte(&mut self, byte_number: u8, value: u8) {
-        if byte_number < 1 || byte_number > 5 {
-            panic!("{byte_number} is out of scope");
-        }
-        let byte_number = byte_number;
-        let value = value as u32;
-        let value = value << 6 * (5 - byte_number);
-        let result = self.value & !BYTES[byte_number as usize];
-        self.value = value | result;
-    }
-
-    fn set_bytes(&mut self, byte_numbers: &[u8], value: u32) {
-        // for b in byte_numbers {
-        // self.set_byte(*b, value & BYTES[*b as usize]);
-        // }
-    }
-
-    fn get_bytes(&self, byte_numbes: &[u8]) -> u32 {
-        0
-    }
-
-    fn get_sign(&self) -> i8 {
-        if self.value & SIGN == 0 {
-            0
-        } else {
-            -1
-        }
-    }
-
-    fn set_sign(&mut self, sign: i8) {
-        let value = Word::get_sign_mask_from_value(sign as i32);
-        let result = self.value & !SIGN;
-        self.value = value | result;
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct WordAccess {
-    pub left: u8,
-    pub right: u8,
-    pub spec: u8,
-}
-
-impl WordAccess {
-    pub fn new(left: u8, right: u8) -> WordAccess {
-        if left > 5 || right > 5 {
-            panic!("wrong left, right values {}:{}", left, right)
-        }
-
-        WordAccess {
-            left,
-            right,
-            spec: (8 * left + right),
-        }
-    }
-
-    fn new_by_spec(spec: u8) -> WordAccess {
-        let left: u8 = spec / 8;
-        let right: u8 = spec - left * 8;
-
-        if left > right {
-            panic!("left can't be greather then right {left}:{right}={spec}");
-        }
-        if left > 5 || right > 5 {
-            panic!("wrong parsed values {left}:{right}={spec}");
-        }
-
-        WordAccess { left, right, spec }
-    }
-}
-
-impl PartialEq for WordAccess {
-    fn eq(&self, other: &Self) -> bool {
-        self.left == other.left && self.right == other.right && self.spec == other.spec
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn word_access_new() {
-        for l in 0..6 {
-            for r in l..6 {
-                assert_eq!(WordAccess::new(l, r), WordAccess::new_by_spec(8 * l + r));
-                //println!("{l} {r}")
-            }
-        }
-    }
 
     #[test]
     fn word_get_by_access() {

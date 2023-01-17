@@ -1,11 +1,12 @@
-use crate::memory::word::Instruction;
-use crate::memory::word::ShortWord;
+use crate::memory::Instruction;
+use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
-use crate::memory::word::WordAccess;
+use crate::memory::word_access::WordAccess;
 use crate::memory::Memory;
 use crate::registers::Registers;
-use crate::memory::word::Bytes;
+use crate::memory::Bytes;
 
+// TODO: needs to add indexing
 pub trait LoadOperation {
     fn execute(&self, mem: &Memory, reg: &mut Registers);
 

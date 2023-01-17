@@ -1,4 +1,4 @@
-use crate::memory::word::ShortWord;
+use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 
 #[derive(Debug, Copy, Clone)]

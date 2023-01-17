@@ -1,6 +1,31 @@
 use crate::memory::word::Word;
+use crate::memory::word_access::WordAccess;
 
 pub mod word;
+pub mod word_access;
+pub mod short_word;
+
+pub trait Instruction {
+    fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word;
+
+    fn get_address(&self) -> i32;
+    fn get_i(&self) -> u8;
+    fn get_f(&self) -> WordAccess;
+    fn get_c(&self) -> u8;
+}
+
+pub trait Bytes {
+    type Item;
+
+    fn new_by_bytes(sign: i8, bytes: &[u8]) -> Self::Item;
+    fn get_byte(&self, byte_number: u8) -> u8;
+    fn set_byte(&mut self, byte_number: u8, value: u8);
+    fn get_sign(&self) -> i8; // 0 or -1
+    fn set_sign(&mut self, sign: i8); // 0 or -1
+                                      //
+    fn set_bytes(&mut self, byte_numbes: &[u8], value: u32);
+    fn get_bytes(&self, byte_numbes: &[u8]) -> u32;
+}
 
 pub struct Memory {
     mem: Vec<Box<Word>>,
