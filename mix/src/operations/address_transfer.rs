@@ -1,10 +1,8 @@
-use crate::memory::Bytes;
-use crate::memory::Instruction;
 use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 use crate::memory::word_access::WordAccess;
-use crate::memory::word::MAX_5_BYTES;
-use crate::memory::Memory;
+use crate::memory::Bytes;
+use crate::memory::Instruction;
 use crate::registers::Registers;
 
 struct ENTA {
@@ -39,4 +37,12 @@ impl ENTA {
         // ra.set_sign(); //TODO: -0
         reg.set_a(ra);
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn enta() {}
 }

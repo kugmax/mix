@@ -1,6 +1,14 @@
 use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum RegisterType {
+  A,
+  X,
+  I,
+  J
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Comparison {
     LESS,

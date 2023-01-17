@@ -1,6 +1,6 @@
-use crate::memory::Instruction;
-use crate::memory::Bytes;
 use crate::memory::word_access::WordAccess;
+use crate::memory::Bytes;
+use crate::memory::Instruction;
 
 pub const ABS: u32 = 0b00_111111_111111_111111_111111_111111;
 
@@ -635,11 +635,11 @@ mod tests {
 
         let mut w = Word::new(0);
         w.set_bytes(&[1, 2], 2000);
-        w.set_bytes(&[3,4], 150);
+        w.set_bytes(&[3, 4], 150);
         w.set_bytes(&[5], 0);
 
         assert_eq!(2000, w.get_bytes(&[1, 2]));
-        assert_eq!(150, w.get_bytes(&[3,4]));
+        assert_eq!(150, w.get_bytes(&[3, 4]));
         assert_eq!(0, w.get_bytes(&[5]));
     }
 }

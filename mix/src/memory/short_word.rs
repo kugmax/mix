@@ -3,7 +3,6 @@ use crate::memory::word::BYTES;
 use crate::memory::word::BYTE_4;
 use crate::memory::word::BYTE_5;
 use crate::memory::word::SIGN;
-use crate::memory::word_access::WordAccess;
 use crate::memory::Bytes;
 
 /// ShortWord: 2 bytes (BYTE_4,BYTE_5) and +- sign
@@ -88,7 +87,6 @@ impl Bytes for ShortWord {
 
     fn get_bytes(&self, byte_numbes: &[u8]) -> u32 {
         panic!("not implemented");
-        0
     }
 
     fn get_sign(&self) -> i8 {
@@ -105,8 +103,3 @@ impl Bytes for ShortWord {
         self.value = value | result;
     }
 }
-
-/* #[cfg(test)] */
-/* mod tests { */
-/* use super::*; */
-/* } */

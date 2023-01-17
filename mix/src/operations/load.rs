@@ -1,35 +1,53 @@
-use crate::memory::Instruction;
 use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 use crate::memory::word_access::WordAccess;
-use crate::memory::Memory;
-use crate::registers::Registers;
 use crate::memory::Bytes;
+use crate::memory::Instruction;
+use crate::memory::Memory;
+use crate::operations::get_memory_cell;
+use crate::registers::RegisterType;
+use crate::registers::Registers;
 
-// TODO: needs to add indexing
 pub trait LoadOperation {
     fn execute(&self, mem: &Memory, reg: &mut Registers);
 
-    fn load(instruction: impl Instruction, set_reg: &mut dyn FnMut(Word), mem: &Memory) {
-        let addr = instruction.get_address();
-        let addr = addr.abs();
+    fn load(
+        instruction: impl Instruction,
+        r_type: RegisterType,
+        mem: &Memory,
+        reg: &mut Registers,
+    ) {
+        let f = instruction.get_f();
+        let mem_cell = get_memory_cell(instruction, mem, reg);
+        let value = Word::new(mem_cell.get_by_access(f));
 
-        let mem_cell = mem.get(addr as usize);
-
-        let value = Word::new(mem_cell.get_by_access(instruction.get_f()));
-
-        set_reg(value);
+        if r_type == RegisterType::A {
+            reg.set_a(value);
+        } else if r_type == RegisterType::X {
+            reg.set_x(value);
+        } else {
+            panic!("operation is not supported for register {:#?}", r_type);
+        }
     }
 
-    fn load_negative(instruction: impl Instruction, set_reg: &mut dyn FnMut(Word), mem: &Memory) {
-        let addr = instruction.get_address();
-        let addr = addr.abs();
+    fn load_negative(
+        instruction: impl Instruction,
+        r_type: RegisterType,
+        mem: &Memory,
+        reg: &mut Registers,
+    ) {
+        let f = instruction.get_f();
+        let mem_cell = get_memory_cell(instruction, mem, reg);
 
-        let mem_cell = mem.get(addr as usize);
+        let value = Word::new(mem_cell.get_negative_by_access(f));
 
-        let value = Word::new(mem_cell.get_negative_by_access(instruction.get_f()));
-
-        set_reg(value);
+        if r_type == RegisterType::A {
+            reg.set_a(value);
+        } else if r_type == RegisterType::X {
+            reg.set_x(value);
+        } else {
+            panic!("operation is not supported for register {:#?}", r_type);
+        }
     }
 }
 
@@ -52,8 +70,7 @@ impl LDA {
 
 impl LoadOperation for LDA {
     fn execute(&self, mem: &Memory, reg: &mut Registers) {
-        let mut set_a = |w| reg.set_a(w);
-        <LDA as LoadOperation>::load(self.instruction, &mut set_a, mem);
+        <LDA as LoadOperation>::load(self.instruction, RegisterType::A, mem, reg);
     }
 }
 
@@ -76,8 +93,7 @@ impl LDX {
 
 impl LoadOperation for LDX {
     fn execute(&self, mem: &Memory, reg: &mut Registers) {
-        let mut set = |w| reg.set_x(w);
-        <LDA as LoadOperation>::load(self.instruction, &mut set, mem);
+        <LDA as LoadOperation>::load(self.instruction, RegisterType::X, mem, reg);
     }
 }
 
@@ -132,7 +148,7 @@ impl LDAN {
 impl LoadOperation for LDAN {
     fn execute(&self, mem: &Memory, reg: &mut Registers) {
         let mut set_a = |w| reg.set_a(w);
-        <LDAN as LoadOperation>::load_negative(self.instruction, &mut set_a, mem);
+        <LDAN as LoadOperation>::load_negative(self.instruction, RegisterType::A, mem, reg);
     }
 }
 
@@ -156,7 +172,7 @@ impl LDXN {
 impl LoadOperation for LDXN {
     fn execute(&self, mem: &Memory, reg: &mut Registers) {
         let mut set = |w| reg.set_x(w);
-        <LDAN as LoadOperation>::load_negative(self.instruction, &mut set, mem);
+        <LDAN as LoadOperation>::load_negative(self.instruction, RegisterType::X, mem, reg);
     }
 }
 
@@ -252,11 +268,12 @@ mod tests {
         let word = Word::new_instruction(-80, 3, WordAccess::new(0, 5), 4);
 
         let mut m = Memory::new();
-        m.set(2_000, word.get());
+        m.set(2_010, word.get());
 
         let mut r = Registers::new();
+        r.set_i(1, ShortWord::new(10));
 
-        let ldx = LDX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8));
+        let ldx = LDX::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 8));
         ldx.execute(&m, &mut r);
         assert_instruction(r.get_x(), -80, 3, WordAccess::new(0, 5), 4);
     }
@@ -280,7 +297,7 @@ mod tests {
         assert_eq!(ri.get_byte(4), 5, "ri byte 4 is wrong");
         assert_eq!(ri.get_byte(5), 4, "ri byte 5 is wrong");
     }
-    
+
     #[test]
     fn ldan() {
         let word = Word::new_instruction(-80, 3, WordAccess::new(0, 5), 4);
@@ -308,7 +325,6 @@ mod tests {
         load.execute(&m, &mut r);
         assert_instruction(r.get_x(), 80, 3, WordAccess::new(0, 5), 4);
     }
-
 
     #[test]
     fn ldin() {

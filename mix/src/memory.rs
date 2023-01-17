@@ -42,11 +42,11 @@ impl Memory {
     }
 
     pub fn get(&self, i: usize) -> Word {
-        Word::new(self.mem.get(i).expect("out of range {i}").get())
+        Word::new(self.mem.get(i).expect("memory is out of range {i}").get())
     }
 
     pub fn set(&mut self, i: usize, value: u32) {
-        self.mem.get_mut(i).expect("out of range {i}").set(value);
+        self.mem.get_mut(i).expect("memory is out of range {i}").set(value);
     }
 }
 

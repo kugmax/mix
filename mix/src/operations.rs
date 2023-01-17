@@ -15,14 +15,16 @@ pub mod store;
 
 struct Operations {}
 
-pub fn get_memory_cell(instruction: Word, mem: &Memory, reg: &Registers) -> Word {
+pub fn get_memory_cell(instruction: impl Instruction, mem: &Memory, reg: &Registers) -> Word {
     let mut addr = instruction.get_address();
     addr = addr.abs();
 
     let i = instruction.get_i();
+    println!("Addr, i {}, {}", addr, i);
     if i != 0 {
         addr += reg.get_i(i as usize).get_signed_value();
     }
+    println!("Addr, i {}, {}", addr, i);
 
     mem.get(addr as usize)
 }
