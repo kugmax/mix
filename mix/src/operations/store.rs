@@ -5,17 +5,16 @@ use crate::memory::word::Word;
 use crate::memory::word_access::WordAccess;
 use crate::memory::Memory;
 use crate::registers::Registers;
+use crate::operations::get_memory_cell;
+use crate::operations::get_indexed_addr;
 
 pub trait StoreOperation {
     fn execute(&self, mem: &mut Memory, reg: &Registers);
 
-    fn store(instruction: impl Instruction, reg: Word, mem: &mut Memory) {
-        let addr = instruction.get_address();
-        let addr = addr.abs() as usize;
-
+    fn store(instruction: impl Instruction, from: Word, mem: &mut Memory, reg: &Registers) {
         let f = instruction.get_f();
+        let addr = get_indexed_addr(instruction, reg) as usize;
 
-        let from = reg;
         let mut to = mem.get(addr);
 
         for i in 0..f.right - f.left + 1 {
@@ -54,7 +53,7 @@ impl STA {
 
 impl StoreOperation for STA {
     fn execute(&self, mem: &mut Memory, reg: &Registers) {
-        <STA as StoreOperation>::store(self.instruction, reg.get_a(), mem);
+        <STA as StoreOperation>::store(self.instruction, reg.get_a(), mem, reg);
     }
 }
 
@@ -77,7 +76,7 @@ impl STX {
 
 impl StoreOperation for STX {
     fn execute(&self, mem: &mut Memory, reg: &Registers) {
-        <STX as StoreOperation>::store(self.instruction, reg.get_x(), mem);
+        <STX as StoreOperation>::store(self.instruction, reg.get_x(), mem, reg);
     }
 }
 
@@ -202,7 +201,7 @@ impl STZ {
 
 impl StoreOperation for STZ {
     fn execute(&self, mem: &mut Memory, reg: &Registers) {
-        <STX as StoreOperation>::store(self.instruction, Word::new(0), mem);
+        <STX as StoreOperation>::store(self.instruction, Word::new(0), mem, reg);
     }
 }
 
@@ -414,6 +413,23 @@ mod tests {
         let store = STZ::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 33));
         store.execute(&mut m, &mut r);
         assert_by_bytes(m.get(2_000), 0, 0, 2, 3, 4, 5);
+    }
+
+    #[test]
+    fn sta_indexing() {
+        let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
+        let r_initial = Word::new_by_bytes(0, &[6, 7, 8, 9, 0]);
+
+        let mut m = Memory::new();
+
+        let mut r = Registers::new();
+        r.set_a(r_initial);
+        r.set_i(3, ShortWord::new(10));
+
+        m.set(2_000, m_initial.get());
+        let store = STA::new(Word::new_instruction(1_990, 3, WordAccess::new(0, 5), 8));
+        store.execute(&mut m, &r);
+        assert_by_bytes(m.get(2_000), 0, 6, 7, 8, 9, 0);
     }
 
     fn assert_by_bytes(

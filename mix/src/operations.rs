@@ -20,11 +20,20 @@ pub fn get_memory_cell(instruction: impl Instruction, mem: &Memory, reg: &Regist
     addr = addr.abs();
 
     let i = instruction.get_i();
-    println!("Addr, i {}, {}", addr, i);
     if i != 0 {
         addr += reg.get_i(i as usize).get_signed_value();
     }
-    println!("Addr, i {}, {}", addr, i);
 
     mem.get(addr as usize)
+}
+
+pub fn get_indexed_addr(instruction: impl Instruction, reg: &Registers) -> i32 {
+    let mut addr = instruction.get_address();
+    addr = addr.abs();
+
+    let i = instruction.get_i();
+    if i != 0 {
+        addr += reg.get_i(i as usize).get_signed_value();
+    }
+    addr 
 }
