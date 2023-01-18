@@ -6,11 +6,24 @@ pub mod word_access;
 pub mod short_word;
 
 pub const POSITIVE: Sign = Sign::PLUS(0);
-pub const MINUS: Sign = Sign::PLUS(-1);
+pub const NEGATIVE: Sign = Sign::MINUS(-1);
 
+#[derive(Debug, Copy, Clone, PartialEq )]
 pub enum Sign {
   PLUS(i32),
-  MINUS(i32)
+  MINUS(i32),
+}
+
+// pub fn swap_sign(sign: Sign) -> Sign {
+  // return match sign {
+    // POSITIVE => NEGATIVE,
+    // NEGATIVE => POSITIVE,
+    // _ => panic!("unsupported sign {:#?}", sign)
+  // }
+// }
+
+pub fn swap_sign(sign: i8) -> i8 {
+  return if sign == 0 {-1} else {0}
 }
 
 pub trait Instruction {
