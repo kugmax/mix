@@ -9,10 +9,10 @@ use crate::registers::RegisterType;
 pub trait EnterOperation {
     fn execute(&self, reg: &mut Registers);
 
-    fn enter(&self, instruction: Word, r_type: RegisterType, reg: &mut Registers) {
+    fn enter(instruction: Word, r_type: RegisterType, reg: &mut Registers) {
         let m = instruction.get_address();
         if m != 0 {
-            reg.set_a(Word::new_from_signed(m));
+            reg.set_reg_by_type(r_type, Word::new_from_signed(m));
             return;
         }
 
@@ -75,27 +75,11 @@ impl ENTX {
             instruction: instruction,
         }
     }
+}
 
+impl EnterOperation for ENTX {
     fn execute(&self, reg: &mut Registers) {
-        let m = self.instruction.get_address();
-        if m != 0 {
-            reg.set_a(Word::new_from_signed(m));
-            return;
-        }
-
-        let sign = self.instruction.get_sign();
-        let i = self.instruction.get_i();
-        if i != 0 {
-            let ri = reg.get_i(i as usize);
-            let mut ra = Word::new(ri.get());
-            ra.set_sign(sign);
-            reg.set_a(ra);
-            return;
-        }
-
-        let mut ra = reg.get_a();
-        ra.set_sign(sign);
-        reg.set_a(ra);
+        <ENTX as EnterOperation>::enter(self.instruction, RegisterType::X, reg);
     }
 }
 
@@ -151,5 +135,55 @@ mod tests {
         let op = ENTA::new(instruction);
         op.execute(&mut r);
         assert_eq!(r.get_a(), Word::new_from_signed(-2_002));
+    }
+
+    #[test]
+    fn entx_zero() {
+        let mut r = Registers::new();
+
+        let op = ENTX::new(Word::new_instruction(
+            2_001,
+            0,
+            WordAccess::new_by_spec(2),
+            48,
+        ));
+        op.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(2_001));
+
+        let op = ENTX::new(Word::new_instruction(
+            -2_001,
+            0,
+            WordAccess::new_by_spec(2),
+            48,
+        ));
+        op.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(-2_001));
+
+        let op = ENTX::new(Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48));
+        op.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(2_001));
+
+        let mut instruction = Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48);
+        instruction.set_sign(-1);
+        let op = ENTX::new(instruction);
+        op.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(-2_001));
+    }
+
+    #[test]
+    fn entx_indexing() {
+        let mut r = Registers::new();
+        r.set_i(1, ShortWord::new(2_001));
+
+        let op = ENTX::new(Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48));
+        op.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(2_001));
+
+        r.set_i(1, ShortWord::new(2_002));
+        let mut instruction = Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48);
+        instruction.set_sign(-1);
+        let op = ENTX::new(instruction);
+        op.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(-2_002));
     }
 }
