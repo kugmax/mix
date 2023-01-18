@@ -5,6 +5,14 @@ pub mod word;
 pub mod word_access;
 pub mod short_word;
 
+pub const POSITIVE: Sign = Sign::PLUS(0);
+pub const MINUS: Sign = Sign::PLUS(-1);
+
+pub enum Sign {
+  PLUS(i32),
+  MINUS(i32)
+}
+
 pub trait Instruction {
     fn new_instruction(address: i32, i: u8, f: WordAccess, c: u8) -> Word;
 
