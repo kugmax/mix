@@ -83,6 +83,42 @@ impl EnterOperation for ENTX {
     }
 }
 
+struct ENTi {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+    i: u8,
+
+    instruction: Word,
+}
+
+impl ENTi {
+    pub fn new(instruction: Word) -> ENTi {
+      let i = instruction.get_i();
+        ENTi {
+            code: 48 + i as u32,
+            execution_time: 1,
+            f: 2,
+            i: i,
+            instruction: instruction,
+        }
+    }
+
+    fn execute(&self, reg: &mut Registers) {
+        let m = self.instruction.get_address();
+        let i = self.instruction.get_i();
+        if m != 0 {
+            reg.set_i(i as usize, ShortWord::new_from_signed(m));
+            return;
+        }
+
+        let sign = self.instruction.get_sign();
+        let mut ri = reg.get_i(i as usize);
+        ri.set_sign(sign);
+        reg.set_i(i as usize, ri);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,5 +221,29 @@ mod tests {
         let op = ENTX::new(instruction);
         op.execute(&mut r);
         assert_eq!(r.get_x(), Word::new_from_signed(-2_002));
+    }
+
+    #[test]
+    fn enti() {
+        let mut r = Registers::new();
+        r.set_i(1, ShortWord::new(2_001));
+
+        let op = ENTi::new(Word::new_instruction(11, 1, WordAccess::new_by_spec(2), 48));
+        op.execute(&mut r);
+        assert_eq!(r.get_i(1), ShortWord::new_from_signed(11));
+
+        let op = ENTi::new(Word::new_instruction(-12, 1, WordAccess::new_by_spec(2), 48));
+        op.execute(&mut r);
+        assert_eq!(r.get_i(1), ShortWord::new_from_signed(-12));
+
+        let op = ENTi::new(Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48));
+        op.execute(&mut r);
+        assert_eq!(r.get_i(1), ShortWord::new_from_signed(12));
+
+        let mut instruction = Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48);
+        instruction.set_sign(-1);
+        let op = ENTi::new(instruction);
+        op.execute(&mut r);
+        assert_eq!(r.get_i(1), ShortWord::new_from_signed(-12));
     }
 }

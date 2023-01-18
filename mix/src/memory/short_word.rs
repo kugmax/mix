@@ -7,7 +7,7 @@ use crate::memory::Bytes;
 
 /// ShortWord: 2 bytes (BYTE_4,BYTE_5) and +- sign
 /// byte is 6 bits from 0-63
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ShortWord {
     value: u32,
 }
@@ -17,6 +17,14 @@ impl ShortWord {
         ShortWord {
             value: ShortWord::to_short_value(value),
         }
+    }
+
+    pub fn new_from_signed(value: i32) -> ShortWord {
+        let sign = Word::get_sign_mask_from_value(value);
+        let value = value.abs() as u32;
+        let value = ShortWord::to_short_value(value);
+        let result = value | sign;
+        ShortWord { value: result }
     }
 
     pub fn set(&mut self, value: u32) {
@@ -80,9 +88,6 @@ impl Bytes for ShortWord {
 
     fn set_bytes(&mut self, byte_numbers: &[u8], value: u32) {
         panic!("not implemented");
-        // for b in byte_numbers {
-        // self.set_byte(*b, value & BYTES[*b as usize]);
-        // }
     }
 
     fn get_bytes(&self, byte_numbes: &[u8]) -> u32 {
@@ -101,5 +106,21 @@ impl Bytes for ShortWord {
         let value = Word::get_sign_mask_from_value(sign as i32);
         let result = self.value & !SIGN;
         self.value = value | result;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_from_signed() {
+        let short = ShortWord::new_from_signed(4_000);
+        assert_eq!(4_000, short.get());
+        assert_eq!(0, short.get_sign());
+
+        let short = ShortWord::new_from_signed(-4_000);
+        assert_eq!(-4_000, short.get_signed_value());
+        assert_eq!(-1, short.get_sign());
     }
 }
