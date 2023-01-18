@@ -3,10 +3,10 @@ use crate::memory::word::Word;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum RegisterType {
-  A,
-  X,
-  I,
-  J
+    A,
+    X,
+    I,
+    J,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -95,5 +95,25 @@ impl Registers {
 
     pub fn get_comparison(&self) -> Comparison {
         self.comparison
+    }
+
+    pub fn set_reg_by_type(&mut self, r_type: RegisterType, value: Word) {
+        if r_type == RegisterType::A {
+            self.set_a(value);
+        } else if r_type == RegisterType::X {
+            self.set_x(value);
+        } else {
+            panic!("operation is not supported for register {:#?}", r_type);
+        }
+    }
+
+    pub fn get_reg_by_type(&self, r_type: RegisterType) -> Word {
+        if r_type == RegisterType::A {
+            self.get_a()
+        } else if r_type == RegisterType::X {
+            self.get_x()
+        } else {
+            panic!("operation is not supported for register {:#?}", r_type);
+        }
     }
 }
