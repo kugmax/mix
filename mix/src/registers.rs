@@ -9,7 +9,7 @@ pub enum RegisterType {
     J,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Comparison {
     LESS,
     EQUAL,

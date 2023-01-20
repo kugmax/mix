@@ -8,7 +8,7 @@ pub mod address_arithmetic;
 pub mod arithmetic;
 pub mod load;
 pub mod store;
-// pub mod compare;
+pub mod compare;
 // pub mod jump;
 // pub mod miscellaneous;
 // pub mod io;
