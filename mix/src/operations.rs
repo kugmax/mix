@@ -4,6 +4,7 @@ use crate::memory::Memory;
 use crate::registers::Registers;
 
 pub mod address_transfer;
+pub mod address_arithmetic;
 pub mod arithmetic;
 pub mod load;
 pub mod store;

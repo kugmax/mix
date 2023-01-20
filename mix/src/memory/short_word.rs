@@ -5,6 +5,8 @@ use crate::memory::word::BYTE_5;
 use crate::memory::word::SIGN;
 use crate::memory::Bytes;
 
+pub const MAX_2_BYTES: i32 = 4095; 
+
 /// ShortWord: 2 bytes (BYTE_4,BYTE_5) and +- sign
 /// byte is 6 bits from 0-63
 #[derive(Debug, Copy, Clone, PartialEq)]

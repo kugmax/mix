@@ -24,7 +24,6 @@ trait SumOperation {
         let result: i32 = sum(reg.get_a().get_signed_value(), value);
 
         if result == 0 {
-            // reg.set_overflow(false); //TODO: how to clean overflow flag ?
             let mut result = Word::new(0);
             result.set_sign(reg.get_a().get_sign());
             reg.set_a(result);
@@ -32,7 +31,6 @@ trait SumOperation {
         }
 
         if result >= -MAX_5_BYTES && result <= MAX_5_BYTES {
-            // reg.set_overflow(false); //TODO: how to clean overflow flag ?
             reg.set_a(Word::new_from_signed(result));
             return;
         }
