@@ -22,7 +22,6 @@ trait IncOperation {
         reg: &mut Registers,
     ) {
         let m = instruction.get_address();
-        println!("{m}");
 
         let reg_value = reg.get_reg_by_type(r_type);
         let result: i32 = op(reg_value.get_signed_value(), m);
@@ -145,6 +144,92 @@ impl IncOperation for DNCX {
     fn execute(&self, reg: &mut Registers) {
         let mut sum = |v1, v2| v1 - v2;
         <DNCX as IncOperation>::inc(self.instruction, &mut sum, RegisterType::X, reg);
+    }
+}
+
+struct INCi {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+    i: u8,
+
+    instruction: Word,
+}
+
+impl INCi {
+    pub fn new(instruction: Word) -> INCi {
+        let i = instruction.get_i();
+        INCi {
+            code: 48+i as u32,
+            execution_time: 2,
+            f: 0,
+            i: i,
+            instruction: instruction,
+        }
+    }
+
+    fn execute(&self, reg: &mut Registers) {
+        let m = self.instruction.get_address();
+
+        let reg_value = reg.get_i(self.i as usize);
+        let result: i32 = m + reg_value.get_signed_value();
+
+        if result == 0 {
+            let mut result = ShortWord::new(0);
+            result.set_sign(reg_value.get_sign());
+            reg.set_i(self.i as usize, result);
+            return;
+        }
+
+        if result >= -MAX_2_BYTES && result <= MAX_2_BYTES {
+            reg.set_i(self.i as usize, ShortWord::new_from_signed(result));
+            return;
+        }
+
+        panic!("INCi overflow {m}");
+    }
+}
+
+struct DNCi {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+    i: u8,
+
+    instruction: Word,
+}
+
+impl DNCi {
+    pub fn new(instruction: Word) -> DNCi {
+        let i = instruction.get_i();
+        DNCi {
+            code: 48+i as u32,
+            execution_time: 2,
+            f: 1,
+            i: i,
+            instruction: instruction,
+        }
+    }
+
+    fn execute(&self, reg: &mut Registers) {
+        let m = self.instruction.get_address();
+
+        let reg_value = reg.get_i(self.i as usize);
+        let result: i32 = reg_value.get_signed_value() - m;
+
+        if result == 0 {
+            let mut result = ShortWord::new(0);
+            result.set_sign(reg_value.get_sign());
+            reg.set_i(self.i as usize, result);
+            return;
+        }
+
+        if result >= -MAX_2_BYTES && result <= MAX_2_BYTES {
+            reg.set_i(self.i as usize, ShortWord::new_from_signed(result));
+            return;
+        }
+
+        panic!("DNCi overflow {m}");
     }
 }
 
@@ -342,5 +427,57 @@ mod tests {
         assert_eq!(r.get_x().get_signed_value(), 0);
         assert_eq!(r.get_x().get_sign(), 0);
         assert_eq!(r.is_overflow(), true);
+    }
+
+    #[test]
+    fn inci() {
+        let mut r = Registers::new();
+
+        let operation = INCi::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2), ShortWord::new(2_000));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = INCi::new(Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2), ShortWord::new_from_signed(0));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = INCi::new(Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2), ShortWord::new_from_signed(-2_000));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = INCi::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2).get_signed_value(), 0);
+        assert_eq!(r.get_i(2).get_sign(), -1);
+        assert_eq!(r.is_overflow(), false);
+    }
+
+    #[test]
+    fn dnci() {
+        let mut r = Registers::new();
+
+        let operation = DNCi::new(Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2), ShortWord::new(2_000));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCi::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2), ShortWord::new_from_signed(0));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCi::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2), ShortWord::new_from_signed(-2_000));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCi::new(Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_i(2).get_signed_value(), 0);
+        assert_eq!(r.get_i(2).get_sign(), -1);
+        assert_eq!(r.is_overflow(), false);
     }
 }
