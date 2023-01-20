@@ -90,6 +90,51 @@ impl CompareOperation for CMPX {
     }
 }
 
+struct CMPi {
+    code: u32,
+    execution_time: u32,
+    i: u8,
+
+    instruction: Word,
+}
+
+impl CMPi {
+    pub fn new(instruction: Word) -> CMPi {
+        let i = instruction.get_i();
+        CMPi {
+            code: 56 + i as u32,
+            execution_time: 2,
+            i:i,
+            instruction: instruction,
+        }
+    }
+
+    pub fn execute(&self, mem: &Memory, reg: &mut Registers) {
+        let f = self.instruction.get_f();
+        if f.spec == 0 {
+            reg.set_comparison(Comparison::EQUAL);
+            return;
+        }
+
+        let mut addr = self.instruction.get_address();
+        addr = addr.abs();
+
+        let mem_cell = mem.get(addr as usize);
+        let mem_value = Word::new(mem_cell.get_by_access(f)).get_signed_value();
+
+        let reg_cell = reg.get_i(self.instruction.get_i() as usize);
+        let reg_value = ShortWord::new(reg_cell.get_by_access(f)).get_signed_value();
+
+        if reg_value > mem_value {
+            reg.set_comparison(Comparison::GREATHER);
+        } else if reg_value < mem_value {
+            reg.set_comparison(Comparison::LESS);
+        } else {
+            reg.set_comparison(Comparison::EQUAL);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,5 +219,48 @@ mod tests {
         let operation = CMPX::new(Word::new_instruction(2_000, 4, WordAccess::new(0, 5), 56));
         operation.execute(&m, &mut r);
         assert_eq!(r.get_comparison(), Comparison::GREATHER);
+    }
+
+    #[test]
+    fn cmpi() {
+        let mut m = Memory::new();
+        m.set(2_001, Word::new_from_signed(1).get());
+        m.set(2_002, Word::new_from_signed(2).get());
+        m.set(2_003, Word::new_from_signed(-1).get());
+        m.set(2_004, Word::new_from_signed(-2).get());
+
+        let mut r = Registers::new();
+        r.set_i(1, ShortWord::new(1));
+        r.set_i(2, ShortWord::new(2));
+        r.set_i(3, ShortWord::new_from_signed(-1));
+        r.set_i(4, ShortWord::new_from_signed(-2));
+
+        let operation = CMPi::new(Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56));
+        operation.execute(&m, &mut r);
+        assert_eq!(r.get_comparison(), Comparison::EQUAL);
+
+        let operation = CMPi::new(Word::new_instruction(2_001, 2, WordAccess::new(0, 5), 56));
+        operation.execute(&m, &mut r);
+        assert_eq!(r.get_comparison(), Comparison::GREATHER);
+
+        let operation = CMPi::new(Word::new_instruction(2_001, 3, WordAccess::new(0, 5), 56));
+        operation.execute(&m, &mut r);
+        assert_eq!(r.get_comparison(), Comparison::LESS);
+
+        let operation = CMPi::new(Word::new_instruction(2_004, 3, WordAccess::new(0, 5), 56));
+        operation.execute(&m, &mut r);
+        assert_eq!(r.get_comparison(), Comparison::GREATHER);
+
+        let operation = CMPi::new(Word::new_instruction(2_003, 4, WordAccess::new(0, 5), 56));
+        operation.execute(&m, &mut r);
+        assert_eq!(r.get_comparison(), Comparison::LESS);
+
+        let operation = CMPi::new(Word::new_instruction(2_004, 4, WordAccess::new(0, 5), 56));
+        operation.execute(&m, &mut r);
+        assert_eq!(r.get_comparison(), Comparison::EQUAL);
+
+        let operation = CMPi::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 0), 56));
+        operation.execute(&m, &mut r);
+        assert_eq!(r.get_comparison(), Comparison::EQUAL);
     }
 }

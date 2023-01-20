@@ -4,6 +4,7 @@ use crate::memory::word::BYTE_4;
 use crate::memory::word::BYTE_5;
 use crate::memory::word::SIGN;
 use crate::memory::Bytes;
+use crate::memory::word_access::WordAccess;
 
 pub const MAX_2_BYTES: i32 = 4095; 
 
@@ -49,6 +50,28 @@ impl ShortWord {
         } else {
             -positive_val
         };
+    }
+
+    pub fn get_by_access(&self, access: WordAccess) -> u32 {
+        if access.left == 0 && access.right == 0 {
+            return self.value & SIGN;
+        }
+
+        let mut result = 0;
+        for b in access.left..access.right + 1 {
+            if b == 0 {
+                continue;
+            }
+            result |= self.value & BYTES[b as usize];
+            // println!("{:#034b}", result);
+        }
+
+        result >>= 6 * (5 - access.right);
+        if access.left == 0 {
+            result |= self.value & SIGN;
+        }
+
+        result
     }
 }
 
