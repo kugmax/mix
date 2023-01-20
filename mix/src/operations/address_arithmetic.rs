@@ -122,6 +122,32 @@ impl IncOperation for DNCA {
     }
 }
 
+struct DNCX {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+
+    instruction: Word,
+}
+
+impl DNCX {
+    pub fn new(instruction: Word) -> DNCX {
+        DNCX {
+            code: 55,
+            execution_time: 2,
+            f: 1,
+            instruction: instruction,
+        }
+    }
+}
+
+impl IncOperation for DNCX {
+    fn execute(&self, reg: &mut Registers) {
+        let mut sum = |v1, v2| v1 - v2;
+        <DNCX as IncOperation>::inc(self.instruction, &mut sum, RegisterType::X, reg);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -267,6 +293,54 @@ mod tests {
         operation.execute(&mut r);
         assert_eq!(r.get_a().get_signed_value(), 0);
         assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.is_overflow(), true);
+    }
+
+    #[test]
+    fn dncx() {
+        let mut r = Registers::new();
+
+        let operation = DNCX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(-2_000));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCX::new(Word::new_instruction(-500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(-1_500));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCX::new(Word::new_instruction(-1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x().get_signed_value(), 0);
+        assert_eq!(r.get_x().get_sign(), -1);
+        assert_eq!(r.is_overflow(), false);
+        
+        let operation = DNCX::new(Word::new_instruction(-1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(1_500));
+        assert_eq!(r.get_x().get_sign(), 0);
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCX::new(Word::new_instruction(1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x().get_signed_value(), 0);
+        assert_eq!(r.get_x().get_sign(), 0);
+        assert_eq!(r.is_overflow(), false);
+        
+        r.set_x(Word::new_from_signed(-2));
+        let operation = DNCX::new(Word::new_instruction(MAX_2_BYTES, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x().get_signed_value(), 0);
+        assert_eq!(r.get_x().get_sign(), 0);
+        assert_eq!(r.is_overflow(), true);
+
+        r.set_x(Word::new_from_signed(1));
+        r.set_overflow(false);
+        let operation = DNCX::new(Word::new_instruction(-MAX_2_BYTES, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x().get_signed_value(), 0);
+        assert_eq!(r.get_x().get_sign(), 0);
         assert_eq!(r.is_overflow(), true);
     }
 }
