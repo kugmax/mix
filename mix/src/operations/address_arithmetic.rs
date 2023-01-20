@@ -101,7 +101,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn add() {
+    fn inca() {
         let mut r = Registers::new();
 
         let operation = INCA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 48));
@@ -145,6 +145,54 @@ mod tests {
         operation.execute(&mut r);
         assert_eq!(r.get_a().get_signed_value(), 0);
         assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.is_overflow(), true);
+    }
+
+    #[test]
+    fn incx() {
+        let mut r = Registers::new();
+
+        let operation = INCX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new(2_000));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = INCX::new(Word::new_instruction(-500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new(1_500));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = INCX::new(Word::new_instruction(-1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new(0));
+        assert_eq!(r.get_x().get_sign(), 0);
+        assert_eq!(r.is_overflow(), false);
+        
+        let operation = INCX::new(Word::new_instruction(-1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x(), Word::new_from_signed(-1_500));
+        assert_eq!(r.get_x().get_sign(), -1);
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = INCX::new(Word::new_instruction(1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x().get_signed_value(), 0);
+        assert_eq!(r.get_x().get_sign(), -1);
+        assert_eq!(r.is_overflow(), false);
+        
+        r.set_x(Word::new(1));
+        let operation = INCX::new(Word::new_instruction(MAX_2_BYTES, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x().get_signed_value(), 0);
+        assert_eq!(r.get_x().get_sign(), 0);
+        assert_eq!(r.is_overflow(), true);
+
+        r.set_x(Word::new_from_signed(-2));
+        r.set_overflow(false);
+        let operation = INCX::new(Word::new_instruction(-MAX_2_BYTES, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_x().get_signed_value(), 0);
+        assert_eq!(r.get_x().get_sign(), 0);
         assert_eq!(r.is_overflow(), true);
     }
 }
