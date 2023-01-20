@@ -228,33 +228,33 @@ mod tests {
 
         let operation = DNCA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 48));
         operation.execute(&mut r);
-        assert_eq!(r.get_a(), Word::new(-2_000));
+        assert_eq!(r.get_a(), Word::new_from_signed(-2_000));
         assert_eq!(r.is_overflow(), false);
 
-        let operation = DNCA::new(Word::new_instruction(500, 0, WordAccess::new(0, 0), 48));
+        let operation = DNCA::new(Word::new_instruction(-500, 0, WordAccess::new(0, 0), 48));
         operation.execute(&mut r);
-        assert_eq!(r.get_a(), Word::new(-1_500));
-        assert_eq!(r.is_overflow(), false);
-
-        let operation = DNCA::new(Word::new_instruction(1_500, 0, WordAccess::new(0, 0), 48));
-        operation.execute(&mut r);
-        assert_eq!(r.get_a(), Word::new(0));
-        assert_eq!(r.get_a().get_sign(), 0);
-        assert_eq!(r.is_overflow(), false);
-        
-        let operation = DNCA::new(Word::new_instruction(1_500, 0, WordAccess::new(0, 0), 48));
-        operation.execute(&mut r);
-        assert_eq!(r.get_a(), Word::new_from_signed(1_500));
-        assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.get_a(), Word::new_from_signed(-1_500));
         assert_eq!(r.is_overflow(), false);
 
         let operation = DNCA::new(Word::new_instruction(-1_500, 0, WordAccess::new(0, 0), 48));
         operation.execute(&mut r);
         assert_eq!(r.get_a().get_signed_value(), 0);
+        assert_eq!(r.get_a().get_sign(), -1);
+        assert_eq!(r.is_overflow(), false);
+        
+        let operation = DNCA::new(Word::new_instruction(-1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a(), Word::new_from_signed(1_500));
+        assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCA::new(Word::new_instruction(1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a().get_signed_value(), 0);
         assert_eq!(r.get_a().get_sign(), 0);
         assert_eq!(r.is_overflow(), false);
         
-        r.set_a(Word::new(-2));
+        r.set_a(Word::new_from_signed(-2));
         let operation = DNCA::new(Word::new_instruction(MAX_2_BYTES, 0, WordAccess::new(0, 0), 48));
         operation.execute(&mut r);
         assert_eq!(r.get_a().get_signed_value(), 0);
