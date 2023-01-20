@@ -92,7 +92,33 @@ impl INCX {
 impl IncOperation for INCX {
     fn execute(&self, reg: &mut Registers) {
         let mut sum = |v1, v2| v1 + v2;
-        <INCA as IncOperation>::inc(self.instruction, &mut sum, RegisterType::X, reg);
+        <INCX as IncOperation>::inc(self.instruction, &mut sum, RegisterType::X, reg);
+    }
+}
+
+struct DNCA {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+
+    instruction: Word,
+}
+
+impl DNCA {
+    pub fn new(instruction: Word) -> DNCA {
+        DNCA {
+            code: 48,
+            execution_time: 2,
+            f: 1,
+            instruction: instruction,
+        }
+    }
+}
+
+impl IncOperation for DNCA {
+    fn execute(&self, reg: &mut Registers) {
+        let mut sum = |v1, v2| v1 - v2;
+        <DNCA as IncOperation>::inc(self.instruction, &mut sum, RegisterType::A, reg);
     }
 }
 
@@ -193,6 +219,54 @@ mod tests {
         operation.execute(&mut r);
         assert_eq!(r.get_x().get_signed_value(), 0);
         assert_eq!(r.get_x().get_sign(), 0);
+        assert_eq!(r.is_overflow(), true);
+    }
+
+    #[test]
+    fn dnca() {
+        let mut r = Registers::new();
+
+        let operation = DNCA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a(), Word::new(-2_000));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCA::new(Word::new_instruction(500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a(), Word::new(-1_500));
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCA::new(Word::new_instruction(1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a(), Word::new(0));
+        assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.is_overflow(), false);
+        
+        let operation = DNCA::new(Word::new_instruction(1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a(), Word::new_from_signed(1_500));
+        assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.is_overflow(), false);
+
+        let operation = DNCA::new(Word::new_instruction(-1_500, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a().get_signed_value(), 0);
+        assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.is_overflow(), false);
+        
+        r.set_a(Word::new(-2));
+        let operation = DNCA::new(Word::new_instruction(MAX_2_BYTES, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a().get_signed_value(), 0);
+        assert_eq!(r.get_a().get_sign(), 0);
+        assert_eq!(r.is_overflow(), true);
+
+        r.set_a(Word::new_from_signed(1));
+        r.set_overflow(false);
+        let operation = DNCA::new(Word::new_instruction(-MAX_2_BYTES, 0, WordAccess::new(0, 0), 48));
+        operation.execute(&mut r);
+        assert_eq!(r.get_a().get_signed_value(), 0);
+        assert_eq!(r.get_a().get_sign(), 0);
         assert_eq!(r.is_overflow(), true);
     }
 }
