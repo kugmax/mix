@@ -70,6 +70,32 @@ impl IncOperation for INCA {
     }
 }
 
+struct INCX {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+
+    instruction: Word,
+}
+
+impl INCX {
+    pub fn new(instruction: Word) -> INCX {
+        INCX {
+            code: 55,
+            execution_time: 2,
+            f: 0,
+            instruction: instruction,
+        }
+    }
+}
+
+impl IncOperation for INCX {
+    fn execute(&self, reg: &mut Registers) {
+        let mut sum = |v1, v2| v1 + v2;
+        <INCA as IncOperation>::inc(self.instruction, &mut sum, RegisterType::X, reg);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
