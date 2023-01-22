@@ -3,6 +3,7 @@ use crate::memory::word_access::WordAccess;
 use crate::memory::Instruction;
 use crate::memory::Memory;
 use crate::operations::load::*;
+use crate::operations::store::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
@@ -92,12 +93,20 @@ impl Operations {
 
     fn get_operation(&self, code: u8, i: u8) -> Box<dyn Operation> {
         return match code {
+            // load
             8 => Box::new(LDA::new()),
             9..=14 => Box::new(LDi::new()),
             15 => Box::new(LDX::new()),
             16 => Box::new(LDAN::new()),
             17..=22 => Box::new(LDiN::new()),
             23 => Box::new(LDXN::new()),
+            // store
+            24 => Box::new(STA::new()),
+            25..=30 => Box::new(STi::new()),
+            31 => Box::new(STX::new()),
+            32 => Box::new(STJ::new()),
+            33 => Box::new(STZ::new()),
+
             _ => panic!("unsupported operation code {code}"),
         };
     }
