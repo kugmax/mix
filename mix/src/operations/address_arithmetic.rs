@@ -55,7 +55,7 @@ impl INCA {
     pub fn new(instruction: Word) -> INCA {
         INCA {
             code: 48,
-            execution_time: 2,
+            execution_time: 1,
             f: 0,
             instruction: instruction,
         }
@@ -81,7 +81,7 @@ impl INCX {
     pub fn new(instruction: Word) -> INCX {
         INCX {
             code: 55,
-            execution_time: 2,
+            execution_time: 1,
             f: 0,
             instruction: instruction,
         }
@@ -107,7 +107,7 @@ impl DNCA {
     pub fn new(instruction: Word) -> DNCA {
         DNCA {
             code: 48,
-            execution_time: 2,
+            execution_time: 1,
             f: 1,
             instruction: instruction,
         }
@@ -133,7 +133,7 @@ impl DNCX {
     pub fn new(instruction: Word) -> DNCX {
         DNCX {
             code: 55,
-            execution_time: 2,
+            execution_time: 1,
             f: 1,
             instruction: instruction,
         }
@@ -161,7 +161,7 @@ impl INCi {
         let i = instruction.get_i();
         INCi {
             code: 48+i as u32,
-            execution_time: 2,
+            execution_time: 1,
             f: 0,
             i: i,
             instruction: instruction,
@@ -204,7 +204,7 @@ impl DNCi {
         let i = instruction.get_i();
         DNCi {
             code: 48+i as u32,
-            execution_time: 2,
+            execution_time: 1,
             f: 1,
             i: i,
             instruction: instruction,
