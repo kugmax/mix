@@ -7,6 +7,7 @@ use crate::operations::address_arithmetic::*;
 use crate::operations::arithmetic::*;
 use crate::operations::load::*;
 use crate::operations::store::*;
+use crate::operations::compare::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
@@ -133,6 +134,10 @@ impl Operations {
             55 if f == 2 => Box::new(ENTX::new()),
             55 if f == 3 => Box::new(ENNX::new()),
 
+            // compare
+            56 => Box::new(CMPA::new()),
+            57..=62 => Box::new(CMPi::new()),
+            63 => Box::new(CMPX::new()),
             _ => panic!("unsupported operation code {code}"),
         };
     }
