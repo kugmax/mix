@@ -2,6 +2,9 @@ use crate::memory::word::Word;
 use crate::memory::word_access::WordAccess;
 use crate::memory::Instruction;
 use crate::memory::Memory;
+use crate::operations::address_transfer::*;
+use crate::operations::address_arithmetic::*;
+use crate::operations::arithmetic::*;
 use crate::operations::load::*;
 use crate::operations::store::*;
 use crate::registers::Registers;
@@ -85,14 +88,20 @@ impl Operations {
         mem: &mut Memory,
         reg: &mut Registers,
     ) -> OperationResult {
-        let op = self.get_operation(instruction.get_c(), instruction.get_i());
+        let op = self.get_operation(instruction.get_c(), instruction.get_f().spec);
 
         let args = OperationArgs::new(addr, instruction, mem, reg);
         op.execute(args)
     }
 
-    fn get_operation(&self, code: u8, i: u8) -> Box<dyn Operation> {
+    fn get_operation(&self, code: u8, f: u8) -> Box<dyn Operation> {
         return match code {
+            // arithmetic
+            1 => Box::new(ADD::new()),
+            2 => Box::new(SUB::new()),
+            3 => Box::new(MUL::new()),
+            4 => Box::new(DIV::new()),
+
             // load
             8 => Box::new(LDA::new()),
             9..=14 => Box::new(LDi::new()),
@@ -100,12 +109,21 @@ impl Operations {
             16 => Box::new(LDAN::new()),
             17..=22 => Box::new(LDiN::new()),
             23 => Box::new(LDXN::new()),
+
             // store
             24 => Box::new(STA::new()),
             25..=30 => Box::new(STi::new()),
             31 => Box::new(STX::new()),
             32 => Box::new(STJ::new()),
             33 => Box::new(STZ::new()),
+
+            // address_transfer
+            48 if f == 2 => Box::new(ENTA::new()),
+            48 if f == 3 => Box::new(ENNA::new()),
+            47..=54 if f == 2 => Box::new(ENTi::new()),
+            47..=54 if f == 3 => Box::new(ENNi::new()),
+            55 if f == 2 => Box::new(ENTX::new()),
+            55 if f == 3 => Box::new(ENNX::new()),
 
             _ => panic!("unsupported operation code {code}"),
         };
