@@ -8,6 +8,7 @@ use crate::operations::arithmetic::*;
 use crate::operations::load::*;
 use crate::operations::store::*;
 use crate::operations::compare::*;
+use crate::operations::jump::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
@@ -117,6 +118,39 @@ impl Operations {
             31 => Box::new(STX::new()),
             32 => Box::new(STJ::new()),
             33 => Box::new(STZ::new()),
+
+            // jump
+            39 if f == 0 => Box::new(JMP::new()),
+            39 if f == 1 => Box::new(JSJ::new()),
+            39 if f == 2 => Box::new(JOV::new()),
+            39 if f == 3 => Box::new(JNOV::new()),
+            39 if f == 4 => Box::new(JL::new()),
+            39 if f == 5 => Box::new(JE::new()),
+            39 if f == 6 => Box::new(JG::new()),
+            39 if f == 7 => Box::new(JGE::new()),
+            39 if f == 8 => Box::new(JNE::new()),
+            39 if f == 9 => Box::new(JLE::new()),
+
+            40 if f == 0 => Box::new(JAN::new()),
+            40 if f == 1 => Box::new(JAZ::new()),
+            40 if f == 2 => Box::new(JAP::new()),
+            40 if f == 3 => Box::new(JANN::new()),
+            40 if f == 4 => Box::new(JANZ::new()),
+            40 if f == 5 => Box::new(JANP::new()),
+
+            41..=46 if f == 0 => Box::new(JiN::new()),
+            41..=46 if f == 1 => Box::new(JiZ::new()),
+            41..=46 if f == 2 => Box::new(JiP::new()),
+            41..=46 if f == 3 => Box::new(JiNN::new()),
+            41..=46 if f == 4 => Box::new(JiNZ::new()),
+            41..=46 if f == 5 => Box::new(JiNP::new()),
+
+            47 if f == 0 => Box::new(JXN::new()),
+            47 if f == 1 => Box::new(JXZ::new()),
+            47 if f == 2 => Box::new(JXP::new()),
+            47 if f == 3 => Box::new(JXNN::new()),
+            47 if f == 4 => Box::new(JXNZ::new()),
+            47 if f == 5 => Box::new(JXNP::new()),
 
             // address_transfer
             48 if f == 0 => Box::new(INCA::new()),
