@@ -118,10 +118,18 @@ impl Operations {
             33 => Box::new(STZ::new()),
 
             // address_transfer
+            48 if f == 0 => Box::new(INCA::new()),
+            48 if f == 1 => Box::new(DNCA::new()),
             48 if f == 2 => Box::new(ENTA::new()),
             48 if f == 3 => Box::new(ENNA::new()),
+
+            47..=54 if f == 0 => Box::new(INCi::new()),
+            47..=54 if f == 1 => Box::new(DNCi::new()),
             47..=54 if f == 2 => Box::new(ENTi::new()),
             47..=54 if f == 3 => Box::new(ENNi::new()),
+
+            55 if f == 0 => Box::new(INCX::new()),
+            55 if f == 1 => Box::new(DNCX::new()),
             55 if f == 2 => Box::new(ENTX::new()),
             55 if f == 3 => Box::new(ENNX::new()),
 
