@@ -280,6 +280,498 @@ impl Operation for JLE {
     }
 }
 
+pub struct JAN {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JAN {
+    pub fn new() -> JAN {
+        JAN {
+            code: 40,
+            execution_time: 1,
+            f: 0,
+        }
+    }
+}
+impl Operation for JAN {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_a().get_signed_value() < 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JAZ {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JAZ {
+    pub fn new() -> JAZ {
+        JAZ {
+            code: 40,
+            execution_time: 1,
+            f: 1,
+        }
+    }
+}
+impl Operation for JAZ {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_a().get_signed_value() == 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JAP {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JAP {
+    pub fn new() -> JAP {
+        JAP {
+            code: 40,
+            execution_time: 1,
+            f: 2,
+        }
+    }
+}
+impl Operation for JAP {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_a().get_signed_value() > 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JANN {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JANN {
+    pub fn new() -> JANN {
+        JANN {
+            code: 40,
+            execution_time: 1,
+            f: 3,
+        }
+    }
+}
+impl Operation for JANN {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_a().get_signed_value() >= 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JANZ {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JANZ {
+    pub fn new() -> JANZ {
+        JANZ {
+            code: 40,
+            execution_time: 1,
+            f: 4,
+        }
+    }
+}
+impl Operation for JANZ {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_a().get_signed_value() != 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JANP {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JANP {
+    pub fn new() -> JANP {
+        JANP {
+            code: 40,
+            execution_time: 1,
+            f: 5,
+        }
+    }
+}
+impl Operation for JANP {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_a().get_signed_value() <= 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JXN {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JXN {
+    pub fn new() -> JXN {
+        JXN {
+            code: 47,
+            execution_time: 1,
+            f: 0,
+        }
+    }
+}
+impl Operation for JXN {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_x().get_signed_value() < 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JXZ {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JXZ {
+    pub fn new() -> JXZ {
+        JXZ {
+            code: 47,
+            execution_time: 1,
+            f: 1,
+        }
+    }
+}
+impl Operation for JXZ {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_x().get_signed_value() == 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JXP {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JXP {
+    pub fn new() -> JXP {
+        JXP {
+            code: 47,
+            execution_time: 1,
+            f: 2,
+        }
+    }
+}
+impl Operation for JXP {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_x().get_signed_value() > 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JXNN {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JXNN {
+    pub fn new() -> JXNN {
+        JXNN {
+            code: 47,
+            execution_time: 1,
+            f: 3,
+        }
+    }
+}
+impl Operation for JXNN {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_x().get_signed_value() >= 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JXNZ {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JXNZ {
+    pub fn new() -> JXNZ {
+        JXNZ {
+            code: 47,
+            execution_time: 1,
+            f: 4,
+        }
+    }
+}
+impl Operation for JXNZ {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_x().get_signed_value() != 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JXNP {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JXNP {
+    pub fn new() -> JXNP {
+        JXNP {
+            code: 47,
+            execution_time: 1,
+            f: 5,
+        }
+    }
+}
+impl Operation for JXNP {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        return if args.reg.get_x().get_signed_value() <= 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JiN {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JiN {
+    pub fn new() -> JiN {
+        JiN {
+            code: 40,
+            execution_time: 1,
+            f: 0,
+        }
+    }
+}
+impl Operation for JiN {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let i = args.instruction.get_i() as usize;
+        return if args.reg.get_i(i).get_signed_value() < 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JiZ {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JiZ {
+    pub fn new() -> JiZ {
+        JiZ {
+            code: 40,
+            execution_time: 1,
+            f: 1,
+        }
+    }
+}
+impl Operation for JiZ {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let i = args.instruction.get_i() as usize;
+        return if args.reg.get_i(i).get_signed_value() == 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JiP {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JiP {
+    pub fn new() -> JiP {
+        JiP {
+            code: 40,
+            execution_time: 1,
+            f: 2,
+        }
+    }
+}
+impl Operation for JiP {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let i = args.instruction.get_i() as usize;
+        return if args.reg.get_i(i).get_signed_value() > 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JiNN {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JiNN {
+    pub fn new() -> JiNN {
+        JiNN {
+            code: 40,
+            execution_time: 1,
+            f: 3,
+        }
+    }
+}
+impl Operation for JiNN {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let i = args.instruction.get_i() as usize;
+        return if args.reg.get_i(i).get_signed_value() >= 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JiNZ {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JiNZ {
+    pub fn new() -> JiNZ {
+        JiNZ {
+            code: 40,
+            execution_time: 1,
+            f: 4,
+        }
+    }
+}
+impl Operation for JiNZ {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let i = args.instruction.get_i() as usize;
+        return if args.reg.get_i(i).get_signed_value() != 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
+pub struct JiNP {
+    code: u32,
+    execution_time: u32,
+    f: u32,
+}
+impl JiNP {
+    pub fn new() -> JiNP {
+        JiNP {
+            code: 40,
+            execution_time: 1,
+            f: 5,
+        }
+    }
+}
+impl Operation for JiNP {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let i = args.instruction.get_i() as usize;
+        return if args.reg.get_i(i).get_signed_value() <= 0 {
+            args.reg.set_j(ShortWord::new(args.addr + 1));
+
+            let next_addr = args.instruction.get_address() as u32;
+            OperationResult::new(self.execution_time, next_addr)
+        } else {
+            OperationResult::from_args(self.execution_time, args)
+        };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
