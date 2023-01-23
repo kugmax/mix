@@ -16,7 +16,7 @@ pub mod arithmetic;
 pub mod compare;
 pub mod load;
 pub mod store;
-// pub mod jump;
+pub mod jump;
 // pub mod miscellaneous;
 // pub mod io;
 // pub mod conversion;
@@ -138,6 +138,7 @@ impl Operations {
             56 => Box::new(CMPA::new()),
             57..=62 => Box::new(CMPi::new()),
             63 => Box::new(CMPX::new()),
+
             _ => panic!("unsupported operation code {code}"),
         };
     }

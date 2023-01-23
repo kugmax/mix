@@ -14,6 +14,7 @@ pub enum Comparison {
     LESS,
     EQUAL,
     GREATHER,
+    NONE,
 }
 
 pub struct Registers {
@@ -39,7 +40,7 @@ impl Registers {
                 ShortWord::new(0),
             ],
             is_overflow: false,
-            comparison: Comparison::EQUAL,
+            comparison: Comparison::NONE,
         }
     }
 
