@@ -18,7 +18,7 @@ pub mod compare;
 pub mod load;
 pub mod store;
 pub mod jump;
-// pub mod miscellaneous;
+pub mod miscellaneous;
 // pub mod io;
 // pub mod conversion;
 
@@ -28,7 +28,6 @@ pub mod jump;
 // f: u8,
 // }
 
-// trait Operation : Sized {
 trait Operation {
     fn execute(&self, args: OperationArgs) -> OperationResult;
 }
