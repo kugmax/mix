@@ -33,6 +33,51 @@ fn shift(value: Word, shift_bytes: u32, op: &mut dyn Fn(u32, u32) -> u32) -> Wor
     return result;
 }
 
+fn shift_ax(
+    ra: Word,
+    rx: Word,
+    shift_bytes: u32,
+    op: &mut dyn Fn(u64, u32) -> u64,
+) -> (Word, Word) {
+    if shift_bytes == 0 {
+        return (ra, rx);
+    }
+
+    let sign_ra = ra.get_sign();
+    let sign_rx = rx.get_sign();
+
+    if shift_bytes >= 10 {
+        let mut result_ra = Word::new(0);
+        result_ra.set_sign(sign_ra);
+
+        let mut result_rx = Word::new(0);
+        result_rx.set_sign(sign_rx);
+
+        return (result_ra, result_rx);
+    }
+
+    let mut tmp_ra = (ra.get() & ABS) as u64;
+    tmp_ra <<= 30;
+    let tmp_rx = (rx.get() & ABS) as u64;
+
+    let mut tmp = tmp_ra | tmp_rx;
+    tmp = op(tmp, shift_bytes);
+
+    let mut tmp_ra = (tmp >> 30) as u32;
+    tmp_ra &= ABS;
+
+    let mut result_ra = Word::new(tmp_ra);
+    result_ra.set_sign(sign_ra);
+
+    let mut tmp_rx = tmp as u32;
+    tmp_rx &= ABS;
+
+    let mut result_rx = Word::new(tmp_rx);
+    result_rx.set_sign(sign_rx);
+
+    return (result_ra, result_rx);
+}
+
 pub struct SLA {
     code: u32,
     execution_time: u32,
@@ -86,6 +131,70 @@ impl Operation for SRA {
         );
 
         args.reg.set_a(result);
+
+        OperationResult::from_args(self.execution_time, args)
+    }
+}
+
+pub struct SLAX {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+}
+impl SLAX {
+    pub fn new() -> SLAX {
+        SLAX {
+            code: 6,
+            execution_time: 2,
+            f: 2,
+        }
+    }
+}
+impl Operation for SLAX {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let mut shift_left = |value: u64, times: u32| value << 6 * times;
+
+        let (ra, rx) = shift_ax(
+            args.reg.get_a(),
+            args.reg.get_x(),
+            args.instruction.get_address().abs() as u32,
+            &mut shift_left,
+        );
+
+        args.reg.set_a(ra);
+        args.reg.set_x(rx);
+
+        OperationResult::from_args(self.execution_time, args)
+    }
+}
+
+pub struct SRAX {
+    code: u32,
+    execution_time: u32,
+    f: u8,
+}
+impl SRAX {
+    pub fn new() -> SRAX {
+        SRAX {
+            code: 6,
+            execution_time: 2,
+            f: 3,
+        }
+    }
+}
+impl Operation for SRAX {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let mut shift_left = |value: u64, times: u32| value >> 6 * times;
+
+        let (ra, rx) = shift_ax(
+            args.reg.get_a(),
+            args.reg.get_x(),
+            args.instruction.get_address().abs() as u32,
+            &mut shift_left,
+        );
+
+        args.reg.set_a(ra);
+        args.reg.set_x(rx);
 
         OperationResult::from_args(self.execution_time, args)
     }
@@ -216,5 +325,73 @@ mod tests {
         );
         op.execute(args);
         assert_eq!(0b00_101111_110111_111011_111101_111110, r.get_a().get());
+    }
+
+    #[test]
+    fn slax() {
+        let op = SLAX::new();
+        let mut r = Registers::new();
+        let mut m = Memory::new();
+
+        let ra = Word::new(0b10_101111_110111_111011_111101_111110);
+        let rx = Word::new(0b10_101111_110111_111011_111101_111110);
+
+        r.set_a(ra);
+        r.set_x(rx);
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(4, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        op.execute(args);
+        assert_eq!(0b10_111110_101111_110111_111011_111101, r.get_a().get());
+        assert_eq!(0b10_111110_000000_000000_000000_000000, r.get_x().get());
+
+        r.set_a(ra);
+        r.set_x(rx);
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(9, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        op.execute(args);
+        assert_eq!(0b10_111110_000000_000000_000000_000000, r.get_a().get());
+        assert_eq!(0b10_000000_000000_000000_000000_000000, r.get_x().get());
+    }
+
+    #[test]
+    fn srax() {
+        let op = SRAX::new();
+        let mut r = Registers::new();
+        let mut m = Memory::new();
+
+        let ra = Word::new(0b10_101111_110111_111011_111101_111110);
+        let rx = Word::new(0b00_101111_110111_111011_111101_111110);
+
+        r.set_a(ra);
+        r.set_x(rx);
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(4, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        op.execute(args);
+        assert_eq!(0b10_000000_000000_000000_000000_101111, r.get_a().get());
+        assert_eq!(0b00_110111_111011_111101_111110_101111, r.get_x().get());
+
+        r.set_a(ra);
+        r.set_x(rx);
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(9, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        op.execute(args);
+        assert_eq!(0b10_000000_000000_000000_000000_000000, r.get_a().get());
+        assert_eq!(0b00_000000_000000_000000_000000_101111, r.get_x().get());
     }
 }
