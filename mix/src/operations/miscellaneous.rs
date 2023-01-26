@@ -337,6 +337,36 @@ impl Operation for SRC {
     }
 }
 
+pub struct MOVE {
+    code: u32,
+    execution_time: u32,
+}
+impl MOVE {
+    pub fn new() -> MOVE {
+        MOVE {
+            code: 7,
+            execution_time: 1, // + 2F
+        }
+    }
+}
+impl Operation for MOVE {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        let n_words = args.instruction.get_f().spec as u32;
+        if n_words == 0 {
+            return OperationResult::from_args(self.execution_time, args);
+        }
+
+        for i in 0..n_words {
+            let from = (args.instruction.get_address() as u32 + i) as usize;
+            let to = (args.reg.get_i(1).get() + i) as usize;
+
+            args.mem.set(to, args.mem.get(from).get());
+        }
+
+        OperationResult::from_args(self.execution_time + 2 * n_words, args)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -693,6 +723,58 @@ mod tests {
         slc.execute(args);
         assert_by_bytes(r.get_a(), 0, 0, 6, 7, 8, 3);
         assert_by_bytes(r.get_x(), -1, 4, 0, 0, 5, 0);
+    }
+
+    #[test]
+    fn move_up() {
+        let op = MOVE::new();
+        let mut r = Registers::new();
+        let mut m = Memory::new();
+
+        m.set(999, 1);
+        m.set(1_000, 2);
+        m.set(1_001, 3);
+        m.set(1_002, 4);
+
+        r.set_i(1, ShortWord::new(999));
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(1_000, 0, WordAccess::new_by_spec(3), 56),
+            &mut m,
+            &mut r,
+        );
+        op.execute(args);
+        assert_eq!(m.get(999).get(), 2);
+        assert_eq!(m.get(1_000).get(), 3);
+        assert_eq!(m.get(1_001).get(), 4);
+        assert_eq!(m.get(1_002).get(), 4);
+    }
+
+    #[test]
+    fn move_down() {
+        let op = MOVE::new();
+        let mut r = Registers::new();
+        let mut m = Memory::new();
+
+        m.set(999, 1);
+        m.set(1_000, 2);
+        m.set(1_001, 3);
+        m.set(1_002, 4);
+        m.set(1_003, 5);
+
+        r.set_i(1, ShortWord::new(1_001));
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(1_000, 0, WordAccess::new_by_spec(3), 56),
+            &mut m,
+            &mut r,
+        );
+        op.execute(args);
+        assert_eq!(m.get(999).get(), 1);
+        assert_eq!(m.get(1_000).get(), 2);
+        assert_eq!(m.get(1_001).get(), 2);
+        assert_eq!(m.get(1_002).get(), 2);
+        assert_eq!(m.get(1_003).get(), 2);
     }
 
     fn assert_by_bytes(
