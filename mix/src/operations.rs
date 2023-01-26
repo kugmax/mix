@@ -9,6 +9,7 @@ use crate::operations::load::*;
 use crate::operations::store::*;
 use crate::operations::compare::*;
 use crate::operations::jump::*;
+use crate::operations::miscellaneous::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
@@ -97,11 +98,25 @@ impl Operations {
 
     fn get_operation(&self, code: u8, f: u8) -> Box<dyn Operation> {
         return match code {
+            0 => Box::new(NOP::new()),
+
             // arithmetic
             1 => Box::new(ADD::new()),
             2 => Box::new(SUB::new()),
             3 => Box::new(MUL::new()),
             4 => Box::new(DIV::new()),
+            
+            5 if f == 2 => Box::new(HLT::new()),
+
+            // shift 
+            6 if f == 0 => Box::new(SLA::new()),
+            6 if f == 1 => Box::new(SRA::new()),
+            6 if f == 2 => Box::new(SLAX::new()),
+            6 if f == 3 => Box::new(SRAX::new()),
+            6 if f == 4 => Box::new(SLC::new()),
+            6 if f == 5 => Box::new(SRC::new()),
+            
+            7 => Box::new(MOVE::new()),
 
             // load
             8 => Box::new(LDA::new()),
