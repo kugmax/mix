@@ -1,8 +1,8 @@
 use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 use crate::memory::word::ABS;
-use crate::memory::word::BYTE_1_FROM_10;
 use crate::memory::word::BYTE_10_FROM_10;
+use crate::memory::word::BYTE_1_FROM_10;
 use crate::memory::word_access::WordAccess;
 use crate::memory::Bytes;
 use crate::memory::Instruction;
@@ -271,7 +271,6 @@ impl SLC {
 }
 impl Operation for SLC {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-
         let mut circularly_left = |value: u64, shift_bytes: u32| {
             let mut tmp = value;
             for i in 0..shift_bytes {
@@ -287,7 +286,7 @@ impl Operation for SLC {
             args.reg.get_a(),
             args.reg.get_x(),
             args.instruction.get_address().abs() as u32,
-            &mut circularly_left 
+            &mut circularly_left,
         );
 
         args.reg.set_a(ra);
@@ -313,7 +312,6 @@ impl SRC {
 }
 impl Operation for SRC {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-
         let mut circularly_right = |value: u64, shift_bytes: u32| {
             let mut tmp = value;
             for i in 0..shift_bytes {
@@ -329,7 +327,7 @@ impl Operation for SRC {
             args.reg.get_a(),
             args.reg.get_x(),
             args.instruction.get_address().abs() as u32,
-            &mut circularly_right 
+            &mut circularly_right,
         );
 
         args.reg.set_a(ra);
@@ -645,6 +643,7 @@ mod tests {
 
         r.set_a(ra);
         r.set_x(rx);
+
         let args = OperationArgs::new(
             1,
             Word::new_instruction(1, 0, WordAccess::new(0, 5), 56),
@@ -652,9 +651,48 @@ mod tests {
             &mut r,
         );
         srax.execute(args);
-
         assert_by_bytes(r.get_a(), 0, 0, 1, 2, 3, 4);
-        assert_by_bytes(r.get_a(), -1, 5, 6, 7, 8, 9);
+        assert_by_bytes(r.get_x(), -1, 5, 6, 7, 8, 9);
+
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(2, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        sla.execute(args);
+        assert_by_bytes(r.get_a(), 0, 2, 3, 4, 0, 0);
+        assert_by_bytes(r.get_x(), -1, 5, 6, 7, 8, 9);
+
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(4, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        src.execute(args);
+        assert_by_bytes(r.get_a(), 0, 6, 7, 8, 9, 2);
+        assert_by_bytes(r.get_x(), -1, 3, 4, 0, 0, 5);
+
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(2, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        sra.execute(args);
+        assert_by_bytes(r.get_a(), 0, 0, 0, 6, 7, 8);
+        assert_by_bytes(r.get_x(), -1, 3, 4, 0, 0, 5);
+
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(501, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        slc.execute(args);
+        assert_by_bytes(r.get_a(), 0, 0, 6, 7, 8, 3);
+        assert_by_bytes(r.get_x(), -1, 4, 0, 0, 5, 0);
     }
 
     fn assert_by_bytes(
