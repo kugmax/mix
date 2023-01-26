@@ -73,7 +73,7 @@ mod tests {
 
         // n
         r.set_i(1, ShortWord::new(10));
-        r.set_j(ShortWord::new(3_999));
+        r.set_j(ShortWord::new(4_000));
 
         // elements
         m.set(1_000, 1);
@@ -93,6 +93,5 @@ mod tests {
         let max = m.get(1_000 + i).get();
 
         println!("Largest element is {max} {i}");
-        // println!("{}", r.get_i(3).get());
     }
 }
