@@ -1,15 +1,11 @@
-// use crate::memory::short_word::ShortWord;
+use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 use crate::memory::word::ABS;
 use crate::memory::word::BYTE_10_FROM_10;
 use crate::memory::word::BYTE_1_FROM_10;
-// use crate::memory::word_access::WordAccess;
 use crate::memory::Bytes;
 use crate::memory::Instruction;
-// use crate::memory::Memory;
 use crate::operations::*;
-// use crate::registers::RegisterType;
-// use crate::registers::Registers;
 
 fn shift(value: Word, shift_bytes: u32, op: &mut dyn Fn(u32, u32) -> u32) -> Word {
     if shift_bytes == 0 {
