@@ -90,15 +90,15 @@ impl Operation for INCX {
     }
 }
 
-pub struct DNCA {
+pub struct DECA {
     code: u32,
     execution_time: u32,
     f: u8,
 }
 
-impl DNCA {
-    pub fn new() -> DNCA {
-        DNCA {
+impl DECA {
+    pub fn new() -> DECA {
+        DECA {
             code: 48,
             execution_time: 1,
             f: 1,
@@ -106,7 +106,7 @@ impl DNCA {
     }
 }
 
-impl Operation for DNCA {
+impl Operation for DECA {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let mut sum = |v1, v2| v1 - v2;
         inc(args.instruction, &mut sum, RegisterType::A, args.reg);
@@ -115,15 +115,15 @@ impl Operation for DNCA {
     }
 }
 
-pub struct DNCX {
+pub struct DECX {
     code: u32,
     execution_time: u32,
     f: u8,
 }
 
-impl DNCX {
-    pub fn new() -> DNCX {
-        DNCX {
+impl DECX {
+    pub fn new() -> DECX {
+        DECX {
             code: 55,
             execution_time: 1,
             f: 1,
@@ -131,7 +131,7 @@ impl DNCX {
     }
 }
 
-impl Operation for DNCX {
+impl Operation for DECX {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let mut sum = |v1, v2| v1 - v2;
         inc(args.instruction, &mut sum, RegisterType::X, args.reg);
@@ -158,7 +158,7 @@ impl INCi {
 
 impl Operation for INCi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         let m = args.instruction.get_address();
 
         let reg_value = args.reg.get_i(i);
@@ -181,15 +181,15 @@ impl Operation for INCi {
     }
 }
 
-pub struct DNCi {
+pub struct DECi {
     code: u32,
     execution_time: u32,
     f: u8,
 }
 
-impl DNCi {
-    pub fn new() -> DNCi {
-        DNCi {
+impl DECi {
+    pub fn new() -> DECi {
+        DECi {
             code: 48,
             execution_time: 1,
             f: 1,
@@ -197,9 +197,9 @@ impl DNCi {
     }
 }
 
-impl Operation for DNCi {
+impl Operation for DECi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         let m = args.instruction.get_address();
 
         let reg_value = args.reg.get_i(i);
@@ -396,8 +396,8 @@ mod tests {
     }
 
     #[test]
-    fn dnca() {
-        let operation = DNCA::new();
+    fn deca() {
+        let operation = DECA::new();
         let mut r = Registers::new();
         let mut m = Memory::new();
 
@@ -481,8 +481,8 @@ mod tests {
     }
 
     #[test]
-    fn dncx() {
-        let operation = DNCX::new();
+    fn decx() {
+        let operation = DECX::new();
         let mut r = Registers::new();
         let mut m = Memory::new();
 
@@ -614,8 +614,8 @@ mod tests {
     }
 
     #[test]
-    fn dnci() {
-        let operation = DNCi::new();
+    fn deci() {
+        let operation = DECi::new();
         let mut r = Registers::new();
         let mut m = Memory::new();
 

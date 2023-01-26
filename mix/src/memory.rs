@@ -1,29 +1,29 @@
 use crate::memory::word::Word;
 use crate::memory::word_access::WordAccess;
 
+pub mod short_word;
 pub mod word;
 pub mod word_access;
-pub mod short_word;
 
 pub const POSITIVE: Sign = Sign::PLUS(0);
 pub const NEGATIVE: Sign = Sign::MINUS(-1);
 
-#[derive(Debug, Copy, Clone, PartialEq )]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Sign {
-  PLUS(i32),
-  MINUS(i32),
+    PLUS(i32),
+    MINUS(i32),
 }
 
 // pub fn swap_sign(sign: Sign) -> Sign {
-  // return match sign {
-    // POSITIVE => NEGATIVE,
-    // NEGATIVE => POSITIVE,
-    // _ => panic!("unsupported sign {:#?}", sign)
-  // }
+// return match sign {
+// POSITIVE => NEGATIVE,
+// NEGATIVE => POSITIVE,
+// _ => panic!("unsupported sign {:#?}", sign)
+// }
 // }
 
 pub fn swap_sign(sign: i8) -> i8 {
-  return if sign == 0 {-1} else {0}
+    return if sign == 0 { -1 } else { 0 };
 }
 
 pub trait Instruction {
@@ -67,7 +67,33 @@ impl Memory {
     }
 
     pub fn set(&mut self, i: usize, value: u32) {
-        self.mem.get_mut(i).expect("memory is out of range {i}").set(value);
+        self.mem
+            .get_mut(i)
+            .expect("memory is out of range {i}")
+            .set(value);
+    }
+
+    pub fn set_instruction(&mut self, mem_i: usize, address: i32, i: u8, f: u8, c: u8) {
+        self.mem
+            .get_mut(mem_i)
+            .expect("memory is out of range {i}")
+            .set(Word::new_instruction(address, i, WordAccess::new_by_spec(f), c).get());
+    }
+
+    pub fn set_instr_as_bytes(&mut self, mem_i: usize, address: i32, i: u8, f: u8, c: u8) {
+        let mut word = Word::new_instruction(address, i, WordAccess::new_by_spec(0), c);
+        word.set_byte(4, f);
+        self.mem
+            .get_mut(mem_i)
+            .expect("memory is out of range {i}")
+            .set(word.get());
+    }
+
+    pub fn set_word(&mut self, i: usize, word: Word) {
+        self.mem
+            .get_mut(i)
+            .expect("memory is out of range {i}")
+            .set(word.get());
     }
 }
 

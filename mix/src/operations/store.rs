@@ -140,13 +140,14 @@ impl Operation for STJ {
         let mut left = args.instruction.get_f().left;
         let mut right = args.instruction.get_f().right;
 
-        if left < 4 {
-            left += 3;
-        }
-
-        if right < 4 {
-            right += 3;
-        }
+        //TODO: same as STi
+        // if left < 4 {
+            // left += 3;
+        // }
+//
+        // if right < 4 {
+            // right += 3;
+        // }
 
         let from = args.reg.get_j();
         let mut to = args.mem.get(addr);

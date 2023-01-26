@@ -1,25 +1,26 @@
 use crate::memory::word::Word;
 use crate::memory::word_access::WordAccess;
 use crate::memory::Instruction;
+use crate::memory::Bytes;
 use crate::memory::Memory;
-use crate::operations::address_transfer::*;
 use crate::operations::address_arithmetic::*;
+use crate::operations::address_transfer::*;
 use crate::operations::arithmetic::*;
-use crate::operations::load::*;
-use crate::operations::store::*;
 use crate::operations::compare::*;
 use crate::operations::jump::*;
+use crate::operations::load::*;
 use crate::operations::miscellaneous::*;
+use crate::operations::store::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
 pub mod address_transfer;
 pub mod arithmetic;
 pub mod compare;
-pub mod load;
-pub mod store;
 pub mod jump;
+pub mod load;
 pub mod miscellaneous;
+pub mod store;
 // pub mod io;
 // pub mod conversion;
 
@@ -57,8 +58,8 @@ impl<'a> OperationArgs<'a> {
 }
 
 pub struct OperationResult {
-    execution_time: u32,
-    next_addr_instruction: u32,
+    pub execution_time: u32,
+    pub next_addr_instruction: u32,
 }
 
 impl OperationResult {
@@ -90,13 +91,14 @@ impl Operations {
         mem: &mut Memory,
         reg: &mut Registers,
     ) -> OperationResult {
-        let op = self.get_operation(instruction.get_c(), instruction.get_f().spec);
+        let op = self.get_operation(instruction.get_c(), instruction.get_byte(4));
 
         let args = OperationArgs::new(addr, instruction, mem, reg);
         op.execute(args)
     }
 
     fn get_operation(&self, code: u8, f: u8) -> Box<dyn Operation> {
+        // println!("op: {code} {f}");
         return match code {
             0 => Box::new(NOP::new()),
 
@@ -105,17 +107,17 @@ impl Operations {
             2 => Box::new(SUB::new()),
             3 => Box::new(MUL::new()),
             4 => Box::new(DIV::new()),
-            
+
             5 if f == 2 => Box::new(HLT::new()),
 
-            // shift 
+            // shift
             6 if f == 0 => Box::new(SLA::new()),
             6 if f == 1 => Box::new(SRA::new()),
             6 if f == 2 => Box::new(SLAX::new()),
             6 if f == 3 => Box::new(SRAX::new()),
             6 if f == 4 => Box::new(SLC::new()),
             6 if f == 5 => Box::new(SRC::new()),
-            
+
             7 => Box::new(MOVE::new()),
 
             // load
@@ -168,17 +170,17 @@ impl Operations {
 
             // address_transfer
             48 if f == 0 => Box::new(INCA::new()),
-            48 if f == 1 => Box::new(DNCA::new()),
+            48 if f == 1 => Box::new(DECA::new()),
             48 if f == 2 => Box::new(ENTA::new()),
             48 if f == 3 => Box::new(ENNA::new()),
 
             47..=54 if f == 0 => Box::new(INCi::new()),
-            47..=54 if f == 1 => Box::new(DNCi::new()),
+            47..=54 if f == 1 => Box::new(DECi::new()),
             47..=54 if f == 2 => Box::new(ENTi::new()),
             47..=54 if f == 3 => Box::new(ENNi::new()),
 
             55 if f == 0 => Box::new(INCX::new()),
-            55 if f == 1 => Box::new(DNCX::new()),
+            55 if f == 1 => Box::new(DECX::new()),
             55 if f == 2 => Box::new(ENTX::new()),
             55 if f == 3 => Box::new(ENNX::new()),
 

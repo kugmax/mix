@@ -107,16 +107,20 @@ impl ENTi {
 impl Operation for ENTi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let m = args.instruction.get_address();
-        let i = args.instruction.get_i();
+        // let i = args.instruction.get_i();
+        // TODO: have to pass code in the new
+        // needs indexing i
+        let to = (args.instruction.get_c() - self.code as u8) as usize;
         if m != 0 {
-            args.reg.set_i(i as usize, ShortWord::new_from_signed(m));
+            args.reg.set_i(to, ShortWord::new_from_signed(m));
             return OperationResult::from_args(self.execution_time, args);
         }
+        let from = args.instruction.get_i() as usize;
 
         let sign = args.instruction.get_sign();
-        let mut ri = args.reg.get_i(i as usize);
+        let mut ri = args.reg.get_i(from);
         ri.set_sign(sign);
-        args.reg.set_i(i as usize, ri);
+        args.reg.set_i(to, ri);
 
         OperationResult::from_args(self.execution_time, args)
     }
@@ -189,7 +193,8 @@ impl ENNi {
 impl Operation for ENNi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let m = args.instruction.get_address();
-        let i = args.instruction.get_i();
+        // let i = args.instruction.get_i();
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         let sign = swap_sign(args.instruction.get_sign());
 
         if m != 0 {

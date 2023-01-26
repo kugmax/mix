@@ -620,7 +620,7 @@ impl JiN {
 }
 impl Operation for JiN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() < 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
@@ -648,7 +648,7 @@ impl JiZ {
 }
 impl Operation for JiZ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() == 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
@@ -676,7 +676,7 @@ impl JiP {
 }
 impl Operation for JiP {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() > 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
@@ -704,7 +704,7 @@ impl JiNN {
 }
 impl Operation for JiNN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() >= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
@@ -732,7 +732,7 @@ impl JiNZ {
 }
 impl Operation for JiNZ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() != 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
@@ -760,7 +760,7 @@ impl JiNP {
 }
 impl Operation for JiNP {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = args.instruction.get_i() as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() <= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 

@@ -17,6 +17,7 @@ pub enum Comparison {
     NONE,
 }
 
+#[derive(Debug)]
 pub struct Registers {
     a: Word,
     x: Word,
