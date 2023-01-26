@@ -367,6 +367,44 @@ impl Operation for MOVE {
     }
 }
 
+pub struct NOP {
+    code: u32,
+    execution_time: u32,
+}
+impl NOP {
+    pub fn new() -> NOP {
+        NOP {
+            code: 0,
+            execution_time: 1, 
+        }
+    }
+}
+impl Operation for NOP {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        OperationResult::from_args(self.execution_time, args)
+    }
+}
+
+pub struct HLT {
+    code: u32,
+    execution_time: u32,
+    f: u8
+}
+impl HLT {
+    pub fn new() -> HLT {
+        HLT {
+            code: 5,
+            execution_time: 10, 
+            f: 2
+        }
+    }
+}
+impl Operation for HLT {
+    fn execute(&self, args: OperationArgs) -> OperationResult {
+        OperationResult::from_args(self.execution_time, args)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
