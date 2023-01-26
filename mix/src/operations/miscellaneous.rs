@@ -628,4 +628,49 @@ mod tests {
         assert_eq!(0b10_110111_111011_111101_111110_111101, r.get_a().get());
         assert_eq!(0b00_111011_110111_101111_011111_101111, r.get_x().get());
     }
+
+    #[test]
+    fn several_shifts() {
+        let src = SRC::new();
+        let srax = SRAX::new();
+        let sla = SLA::new();
+        let sra = SRA::new();
+        let slc = SLC::new();
+
+        let mut r = Registers::new();
+        let mut m = Memory::new();
+
+        let ra = Word::new_by_bytes(0, &[1, 2, 3, 4, 5]);
+        let rx = Word::new_by_bytes(-1, &[6, 7, 8, 9, 10]);
+
+        r.set_a(ra);
+        r.set_x(rx);
+        let args = OperationArgs::new(
+            1,
+            Word::new_instruction(1, 0, WordAccess::new(0, 5), 56),
+            &mut m,
+            &mut r,
+        );
+        srax.execute(args);
+
+        assert_by_bytes(r.get_a(), 0, 0, 1, 2, 3, 4);
+        assert_by_bytes(r.get_a(), -1, 5, 6, 7, 8, 9);
+    }
+
+    fn assert_by_bytes(
+        actual: Word,
+        sign: i8,
+        byte_1: u8,
+        byte_2: u8,
+        byte_3: u8,
+        byte_4: u8,
+        byte_5: u8,
+    ) {
+        assert_eq!(actual.get_sign(), sign, "sing is wrong");
+        assert_eq!(actual.get_byte(1), byte_1, "byte 1 is wrong");
+        assert_eq!(actual.get_byte(2), byte_2, "byte 1 is wrong");
+        assert_eq!(actual.get_byte(3), byte_3, "byte 1 is wrong");
+        assert_eq!(actual.get_byte(4), byte_4, "byte 1 is wrong");
+        assert_eq!(actual.get_byte(5), byte_5, "byte 1 is wrong");
+    }
 }
