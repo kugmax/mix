@@ -1,13 +1,7 @@
 use crate::memory::short_word::ShortWord;
-use crate::memory::short_word::MAX_2_BYTES;
 use crate::memory::word::Word;
-use crate::memory::word_access::WordAccess;
-use crate::memory::Bytes;
 use crate::memory::Instruction;
 use crate::memory::Memory;
-use crate::memory::Sign;
-use crate::memory::NEGATIVE;
-use crate::memory::POSITIVE;
 use crate::operations::get_memory_cell;
 use crate::operations::*;
 use crate::registers::Comparison;

@@ -1,7 +1,5 @@
-use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 use crate::memory::word::MAX_5_BYTES;
-use crate::memory::word_access::WordAccess;
 use crate::memory::Bytes;
 use crate::memory::Instruction;
 use crate::memory::Memory;
