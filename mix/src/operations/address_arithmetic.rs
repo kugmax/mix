@@ -573,7 +573,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );
@@ -583,7 +583,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(-2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );
@@ -593,7 +593,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(-2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );
@@ -603,7 +603,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );
@@ -621,7 +621,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(-2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );
@@ -631,7 +631,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );
@@ -641,7 +641,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );
@@ -651,7 +651,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(-2_000, 2, WordAccess::new(0, 0), 48),
+            Word::new_instruction(-2_000, 0, WordAccess::new(0, 0), 50),
             &mut m,
             &mut r,
         );

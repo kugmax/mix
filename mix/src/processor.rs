@@ -84,6 +84,7 @@ mod tests {
         m.set(1_005, 20);
         m.set(1_006, 2);
         m.set(1_007, 33);
+        // m.set(1_007, Word::new_from_signed(-33).get());
         m.set(1_008, 2);
         m.set(1_009, 10);
 
@@ -92,6 +93,7 @@ mod tests {
         let i = r.get_i(2).get() as usize;
         let max = m.get(1_000 + i).get();
 
-        println!("Largest element is {max} {i}");
+        assert_eq!(i, 7);
+        assert_eq!(max, 33);
     }
 }

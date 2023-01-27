@@ -107,9 +107,6 @@ impl ENTi {
 impl Operation for ENTi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let m = args.instruction.get_address();
-        // let i = args.instruction.get_i();
-        // TODO: have to pass code in the new
-        // needs indexing i
         let to = (args.instruction.get_c() - self.code as u8) as usize;
         if m != 0 {
             args.reg.set_i(to, ShortWord::new_from_signed(m));
@@ -193,20 +190,20 @@ impl ENNi {
 impl Operation for ENNi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let m = args.instruction.get_address();
-        // let i = args.instruction.get_i();
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let to = (args.instruction.get_c() - self.code as u8) as usize;
         let sign = swap_sign(args.instruction.get_sign());
 
         if m != 0 {
             let mut result = ShortWord::new_from_signed(m);
             result.set_sign(sign);
-            args.reg.set_i(i as usize, result);
+            args.reg.set_i(to, result);
             return OperationResult::from_args(self.execution_time, args);
         }
 
-        let mut ri = args.reg.get_i(i as usize);
+        let from = args.instruction.get_i() as usize;
+        let mut ri = args.reg.get_i(from);
         ri.set_sign(sign);
-        args.reg.set_i(i as usize, ri);
+        args.reg.set_i(to, ri);
 
         OperationResult::from_args(self.execution_time, args)
     }
@@ -360,7 +357,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(11, 1, WordAccess::new_by_spec(2), 48),
+            Word::new_instruction(11, 0, WordAccess::new_by_spec(2), 49),
             &mut m,
             &mut r,
         );
@@ -369,7 +366,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(-12, 1, WordAccess::new_by_spec(2), 48),
+            Word::new_instruction(-12, 0, WordAccess::new_by_spec(2), 49),
             &mut m,
             &mut r,
         );
@@ -378,17 +375,16 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48),
+            Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 49),
             &mut m,
             &mut r,
         );
         op.execute(args);
         assert_eq!(r.get_i(1), ShortWord::new_from_signed(12));
 
-        let mut instruction = Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48);
+        let mut instruction = Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 49);
         instruction.set_sign(-1);
         let args = OperationArgs::new(1, instruction, &mut m, &mut r);
-        let op = ENTi::new();
         op.execute(args);
         assert_eq!(r.get_i(1), ShortWord::new_from_signed(-12));
     }
@@ -531,7 +527,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(11, 1, WordAccess::new_by_spec(2), 48),
+            Word::new_instruction(11, 0, WordAccess::new_by_spec(2), 49),
             &mut m,
             &mut r,
         );
@@ -540,7 +536,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(-12, 1, WordAccess::new_by_spec(2), 48),
+            Word::new_instruction(-12, 0, WordAccess::new_by_spec(2), 49),
             &mut m,
             &mut r,
         );
@@ -549,14 +545,14 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48),
+            Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 49),
             &mut m,
             &mut r,
         );
         op.execute(args);
         assert_eq!(r.get_i(1), ShortWord::new_from_signed(-12));
 
-        let mut instruction = Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 48);
+        let mut instruction = Word::new_instruction(0, 1, WordAccess::new_by_spec(2), 49);
         instruction.set_sign(-1);
         let args = OperationArgs::new(1, instruction, &mut m, &mut r);
         op.execute(args);

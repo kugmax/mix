@@ -137,23 +137,11 @@ impl Operation for STJ {
         let addr = addr.abs() as usize;
 
         let is_set_sign = args.instruction.get_f().left == 0;
-        let mut left = args.instruction.get_f().left;
-        let mut right = args.instruction.get_f().right;
-
-        //TODO: same as STi
-        // if left < 4 {
-            // left += 3;
-        // }
-//
-        // if right < 4 {
-            // right += 3;
-        // }
+        let left = args.instruction.get_f().left;
+        let right = args.instruction.get_f().right;
 
         let from = args.reg.get_j();
         let mut to = args.mem.get(addr);
-        to.set_byte(1, 0);
-        to.set_byte(2, 0);
-        to.set_byte(3, 0);
 
         for i in 0..right - left + 1 {
             let b_from = 5 - i;
@@ -439,7 +427,7 @@ mod tests {
             &mut r,
         );
         store.execute(args);
-        assert_by_bytes(m.get(2_000), 0, 0, 0, 0, 6, 7);
+        assert_by_bytes(m.get(2_000), 0, 6, 7, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
         let args = OperationArgs::new(
@@ -449,7 +437,7 @@ mod tests {
             &mut r,
         );
         store.execute(args);
-        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 6, 7);
+        assert_by_bytes(m.get(2_000), -1, 6, 7, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
         let args = OperationArgs::new(
@@ -459,7 +447,7 @@ mod tests {
             &mut r,
         );
         store.execute(args);
-        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 7, 5);
+        assert_by_bytes(m.get(2_000), -1, 7, 2, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
         let args = OperationArgs::new(
@@ -469,7 +457,7 @@ mod tests {
             &mut r,
         );
         store.execute(args);
-        assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 4, 7);
+        assert_by_bytes(m.get(2_000), -1, 1, 7, 3, 4, 5);
     }
 
     #[test]
@@ -576,9 +564,9 @@ mod tests {
     ) {
         assert_eq!(actual.get_sign(), sign, "sing is wrong");
         assert_eq!(actual.get_byte(1), byte_1, "byte 1 is wrong");
-        assert_eq!(actual.get_byte(2), byte_2, "byte 1 is wrong");
-        assert_eq!(actual.get_byte(3), byte_3, "byte 1 is wrong");
-        assert_eq!(actual.get_byte(4), byte_4, "byte 1 is wrong");
-        assert_eq!(actual.get_byte(5), byte_5, "byte 1 is wrong");
+        assert_eq!(actual.get_byte(2), byte_2, "byte 2 is wrong");
+        assert_eq!(actual.get_byte(3), byte_3, "byte 3 is wrong");
+        assert_eq!(actual.get_byte(4), byte_4, "byte 4 is wrong");
+        assert_eq!(actual.get_byte(5), byte_5, "byte 5 is wrong");
     }
 }
