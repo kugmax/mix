@@ -89,6 +89,20 @@ impl Memory {
             .set(word.get());
     }
 
+    pub fn set_bytes(&mut self, mem_i: usize, sign: i8, byte_1: u8, byte_2: u8, byte_3: u8, byte_4: u8, byte_5: u8) {
+        let mut word = Word::new(0);
+        word.set_sign(sign);
+        word.set_byte(1, byte_1);
+        word.set_byte(2, byte_2);
+        word.set_byte(3, byte_3);
+        word.set_byte(4, byte_4);
+        word.set_byte(5, byte_5);
+        self.mem
+            .get_mut(mem_i)
+            .expect("memory is out of range {i}")
+            .set(word.get());
+    }
+
     pub fn set_word(&mut self, i: usize, word: Word) {
         self.mem
             .get_mut(i)
