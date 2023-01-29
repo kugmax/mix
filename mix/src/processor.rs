@@ -49,7 +49,7 @@ impl Processor {
 mod tests {
     use super::*;
 
-    // #[test]
+    #[test]
     fn find_maximum() {
         let mut m = Memory::new();
         let mut r = Registers::new();
@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    fn program_P() {
+    fn program_p() {
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -147,5 +147,7 @@ mod tests {
 
         // r.set_i(1, ShortWord::new(10));
         r.set_j(ShortWord::new(4_000));
+
+        p.execute(&mut m, &mut r);
     }
 }

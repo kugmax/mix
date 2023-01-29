@@ -11,6 +11,7 @@ use crate::operations::jump::*;
 use crate::operations::load::*;
 use crate::operations::miscellaneous::*;
 use crate::operations::store::*;
+use crate::operations::io::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
@@ -21,7 +22,7 @@ pub mod jump;
 pub mod load;
 pub mod miscellaneous;
 pub mod store;
-// pub mod io;
+pub mod io;
 // pub mod conversion;
 
 // pub struct OperationDescription {
