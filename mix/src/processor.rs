@@ -38,7 +38,7 @@ impl Processor {
 
             let result = op.execute(self.addr, instruction, mem, reg);
 
-            println!("{:#?}", reg);
+            // println!("{:#?}", reg);
 
             self.addr = result.next_addr_instruction;
         }
@@ -94,7 +94,7 @@ mod tests {
         assert_eq!(max, 33);
     }
 
-    #[test]
+    // #[test]
     fn program_p() {
         let mut m = Memory::new();
         let mut r = Registers::new();

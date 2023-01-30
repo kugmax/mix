@@ -12,6 +12,7 @@ use crate::operations::load::*;
 use crate::operations::miscellaneous::*;
 use crate::operations::store::*;
 use crate::operations::io::*;
+use crate::operations::conversion::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
@@ -23,7 +24,7 @@ pub mod load;
 pub mod miscellaneous;
 pub mod store;
 pub mod io;
-// pub mod conversion;
+pub mod conversion;
 
 // pub struct OperationDescription {
 // code: u32,
@@ -109,6 +110,8 @@ impl Operations {
             3 => Box::new(MUL::new()),
             4 => Box::new(DIV::new()),
 
+            5 if f == 0 => Box::new(NUM::new()),
+            5 if f == 1 => Box::new(CHAR::new()),
             5 if f == 2 => Box::new(HLT::new()),
 
             // shift
