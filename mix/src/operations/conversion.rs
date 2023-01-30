@@ -1,12 +1,11 @@
 use crate::memory::word::Word;
 use crate::memory::word::MAX_5_BYTES;
 use crate::memory::Bytes;
-use crate::memory::Instruction;
-use crate::memory::Memory;
-use crate::operations::get_memory_cell;
+// use crate::memory::Instruction;
+// use crate::memory::Memory;
+// use crate::operations::get_memory_cell;
 use crate::operations::*;
 use crate::registers::Registers;
-use std::collections::HashMap;
 
 pub const SYMBOLS: [char; 56] = [
     ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', '\u{0394}', 'J', 'K', 'L', 'M', 'N', 'O',
