@@ -107,10 +107,11 @@ impl Operation for LDi {
 
         let mem_cell = args.mem.get(addr as usize);
 
+        let to = (args.instruction.get_c() - self.code as u8) as usize;
+
         let value = ShortWord::new(mem_cell.get_by_access(args.instruction.get_f()));
 
-        let i = args.instruction.get_i();
-        args.reg.set_i(i as usize, value);
+        args.reg.set_i(to, value);
 
         OperationResult::from_args(self.execution_time, args)
     }
@@ -185,8 +186,8 @@ impl Operation for LDiN {
 
         let value = ShortWord::new(mem_cell.get_negative_by_access(args.instruction.get_f()));
 
-        let i = args.instruction.get_i();
-        args.reg.set_i(i as usize, value);
+        let to = (args.instruction.get_c() - self.code as u8) as usize;
+        args.reg.set_i(to, value);
 
         OperationResult::from_args(self.execution_time, args)
     }
@@ -316,7 +317,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 8),
+            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 10),
             &mut m,
             &mut r,
         );
@@ -381,7 +382,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 8),
+            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 18),
             &mut m,
             &mut r,
         );

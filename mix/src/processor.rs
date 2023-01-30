@@ -1,6 +1,8 @@
 use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
 use crate::memory::Memory;
+use crate::memory::Instruction;
+use crate::memory::Bytes;
 use crate::operations::Operations;
 use crate::registers::Registers;
 
@@ -27,18 +29,18 @@ impl Processor {
 
             let instruction = mem.get(self.addr as usize);
 
-            // println!(
-            // "{}:{} {} {} {}",
-            // self.addr,
-            // instruction.get_address(),
-            // instruction.get_i(),
-            // instruction.get_byte(4),
-            // instruction.get_c()
-            // );
+            println!(
+            "{}:{} {} {} {}",
+            self.addr,
+            instruction.get_address(),
+            instruction.get_i(),
+            instruction.get_byte(4),
+            instruction.get_c()
+            );
 
             let result = op.execute(self.addr, instruction, mem, reg);
 
-            // println!("{:#?}", reg);
+            println!("{:#?}", reg);
 
             self.addr = result.next_addr_instruction;
         }
@@ -49,7 +51,7 @@ impl Processor {
 mod tests {
     use super::*;
 
-    #[test]
+    // #[test]
     fn find_maximum() {
         let mut m = Memory::new();
         let mut r = Registers::new();

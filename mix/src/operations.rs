@@ -139,6 +139,11 @@ impl Operations {
             32 => Box::new(STJ::new()),
             33 => Box::new(STZ::new()),
 
+            //IO
+            35 => Box::new(IOC::new()),
+            36 => Box::new(IN::new()),
+            37 => Box::new(OUT::new()),
+
             // jump
             39 if f == 0 => Box::new(JMP::new()),
             39 if f == 1 => Box::new(JSJ::new()),
