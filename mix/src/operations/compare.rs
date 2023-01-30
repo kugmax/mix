@@ -96,13 +96,11 @@ impl Operation for CMPi {
             return OperationResult::from_args(self.execution_time, args);
         }
 
-        let mut addr = args.instruction.get_address();
-        addr = addr.abs();
-
-        let mem_cell = args.mem.get(addr as usize);
+        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
         let mem_value = Word::new(mem_cell.get_by_access(f)).get_signed_value();
 
-        let reg_cell = args.reg.get_i(args.instruction.get_i() as usize);
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let reg_cell = args.reg.get_i(i);
         let reg_value = ShortWord::new(reg_cell.get_by_access(f)).get_signed_value();
 
         if reg_value > mem_value {
@@ -283,7 +281,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56),
+            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 57),
             &mut m,
             &mut r,
         );
@@ -292,7 +290,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_001, 2, WordAccess::new(0, 5), 56),
+            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 58),
             &mut m,
             &mut r,
         );
@@ -301,7 +299,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_001, 3, WordAccess::new(0, 5), 56),
+            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 59),
             &mut m,
             &mut r,
         );
@@ -310,7 +308,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_004, 3, WordAccess::new(0, 5), 56),
+            Word::new_instruction(2_004, 0, WordAccess::new(0, 5), 59),
             &mut m,
             &mut r,
         );
@@ -319,7 +317,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_003, 4, WordAccess::new(0, 5), 56),
+            Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 60),
             &mut m,
             &mut r,
         );
@@ -328,7 +326,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_004, 4, WordAccess::new(0, 5), 56),
+            Word::new_instruction(2_004, 0, WordAccess::new(0, 5), 60),
             &mut m,
             &mut r,
         );
@@ -337,7 +335,7 @@ mod tests {
 
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 0), 56),
+            Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 57),
             &mut m,
             &mut r,
         );

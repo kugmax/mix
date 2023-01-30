@@ -36,8 +36,9 @@ impl Operation for IN {
         if io_unit != 18 {
             panic!("unsupported io unit {io_unit}");
         }
+        panic!("not implemented");
 
-        OperationResult::from_args(self.execution_time, args)
+        // OperationResult::from_args(self.execution_time, args)
     }
 }
 
@@ -77,7 +78,6 @@ impl Operation for OUT {
             panic!("unsupported io unit {io_unit}");
         }
         let unit_block = 24;
-        // let start_from = args.instruction.get_address();
         let start_from = get_indexed_addr(args.instruction, args.reg);
 
         let mut out_buffer = Vec::new();

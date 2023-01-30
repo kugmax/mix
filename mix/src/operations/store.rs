@@ -86,11 +86,9 @@ impl STi {
 
 impl Operation for STi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let addr = args.instruction.get_address();
-        let addr = addr.abs() as usize;
-
+        let addr = get_indexed_addr(args.instruction, args.reg) as usize;
+        let i = (args.instruction.get_c() - self.code as u8) as usize;
         let f = args.instruction.get_f();
-        let i = args.instruction.get_i() as usize;
 
         let from = args.reg.get_i(i);
         let mut to = args.mem.get(addr);
@@ -133,8 +131,7 @@ impl STJ {
 
 impl Operation for STJ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let addr = args.instruction.get_address();
-        let addr = addr.abs() as usize;
+        let addr = get_indexed_addr(args.instruction, args.reg) as usize;
 
         let is_set_sign = args.instruction.get_f().left == 0;
         let left = args.instruction.get_f().left;
@@ -369,7 +366,7 @@ mod tests {
         m.set(2_000, m_initial.get());
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 24),
+            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 26),
             &mut m,
             &mut r,
         );
@@ -379,7 +376,7 @@ mod tests {
         m.set(2_000, m_initial.get());
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(4, 5), 24),
+            Word::new_instruction(2_000, 0, WordAccess::new(4, 5), 26),
             &mut m,
             &mut r,
         );
@@ -389,7 +386,7 @@ mod tests {
         m.set(2_000, m_initial.get());
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(4, 4), 24),
+            Word::new_instruction(2_000, 0, WordAccess::new(4, 4), 26),
             &mut m,
             &mut r,
         );
@@ -399,7 +396,7 @@ mod tests {
         m.set(2_000, m_initial.get());
         let args = OperationArgs::new(
             1,
-            Word::new_instruction(2_000, 2, WordAccess::new(5, 5), 24),
+            Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 26),
             &mut m,
             &mut r,
         );

@@ -153,7 +153,7 @@ impl INCi {
 impl Operation for INCi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let i = (args.instruction.get_c() - self.code as u8) as usize;
-        let m = args.instruction.get_address();
+        let m = args.instruction.get_address(); // it's value not address
 
         let reg_value = args.reg.get_i(i);
         let result: i32 = m + reg_value.get_signed_value();
@@ -194,7 +194,7 @@ impl DECi {
 impl Operation for DECi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let i = (args.instruction.get_c() - self.code as u8) as usize;
-        let m = args.instruction.get_address();
+        let m = args.instruction.get_address();// it's value not address
 
         let reg_value = args.reg.get_i(i);
         let result: i32 = reg_value.get_signed_value() - m;

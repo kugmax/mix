@@ -102,11 +102,7 @@ impl LDi {
 
 impl Operation for LDi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let addr = args.instruction.get_address();
-        let addr = addr.abs();
-
-        let mem_cell = args.mem.get(addr as usize);
-
+        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
         let to = (args.instruction.get_c() - self.code as u8) as usize;
 
         let value = ShortWord::new(mem_cell.get_by_access(args.instruction.get_f()));
@@ -179,11 +175,7 @@ impl LDiN {
 
 impl Operation for LDiN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let addr = args.instruction.get_address();
-        let addr = addr.abs();
-
-        let mem_cell = args.mem.get(addr as usize);
-
+        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
         let value = ShortWord::new(mem_cell.get_negative_by_access(args.instruction.get_f()));
 
         let to = (args.instruction.get_c() - self.code as u8) as usize;

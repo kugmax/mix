@@ -1,5 +1,6 @@
 use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
+use std::fmt;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum RegisterType {
@@ -17,13 +18,22 @@ pub enum Comparison {
     NONE,
 }
 
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct Registers {
     a: Word,
     x: Word,
     j_i: [ShortWord; 7], // 0 = reg J, 1-6 reg I
     is_overflow: bool,
     comparison: Comparison,
+}
+
+impl fmt::Debug for Registers {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ra:{} rx:{} r1:{} r2:{} r3:{} r4:{} r5:{} r6:{} rj:{} ov:{} cmp:{:?}",
+          self.a.get(), self.x.get(), 
+          self.j_i[0].get(), self.j_i[1].get(),self.j_i[2].get(),self.j_i[3].get(),self.j_i[4].get(),self.j_i[5].get(),self.j_i[6].get(),
+          self.is_overflow, self.comparison)
+    }
 }
 
 impl Registers {
