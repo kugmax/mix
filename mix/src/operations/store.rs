@@ -126,7 +126,8 @@ impl Operation for STi {
         OperationResult::from_args(self.execution_time, args)
     }
     fn get_name(&self) -> String {
-        String::from("STi")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("ST") + &i.to_string()
     }
 }
 

@@ -126,7 +126,8 @@ impl Operation for LDi {
         OperationResult::from_args(self.execution_time, args)
     }
     fn get_name(&self) -> String {
-        String::from("LDi")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("LD") + &i.to_string() 
     }
 }
 
@@ -213,7 +214,8 @@ impl Operation for LDiN {
         OperationResult::from_args(self.execution_time, args)
     }
     fn get_name(&self) -> String {
-        String::from("LDiN")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("LD") + &i.to_string() + &String::from("N")
     }
 }
 

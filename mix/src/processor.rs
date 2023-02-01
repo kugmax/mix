@@ -38,10 +38,10 @@ impl Processor {
 
             self.addr = result.next_addr_instruction;
 
-            count += 1;
-            if count > 50 {
-                break;
-            }
+            // count += 1;
+            // if count > 50 {
+                // break;
+            // }
         }
     }
 }

@@ -734,7 +734,8 @@ impl Operation for JiN {
         };
     }
     fn get_name(&self) -> String {
-        String::from("JiN")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("J") + &i.to_string() + &String::from("N")
     }
 }
 
@@ -767,7 +768,8 @@ impl Operation for JiZ {
         };
     }
     fn get_name(&self) -> String {
-        String::from("JiZ")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("J") + &i.to_string() + &String::from("Z")
     }
 }
 
@@ -800,7 +802,8 @@ impl Operation for JiP {
         };
     }
     fn get_name(&self) -> String {
-        String::from("JiP")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("J") + &i.to_string() + &String::from("P")
     }
 }
 
@@ -833,7 +836,8 @@ impl Operation for JiNN {
         };
     }
     fn get_name(&self) -> String {
-        String::from("JiNN")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("J") + &i.to_string() + &String::from("NN")
     }
 }
 
@@ -866,7 +870,8 @@ impl Operation for JiNZ {
         };
     }
     fn get_name(&self) -> String {
-        String::from("JiNZ")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("J") + &i.to_string() + &String::from("NZ")
     }
 }
 
@@ -899,7 +904,8 @@ impl Operation for JiNP {
         };
     }
     fn get_name(&self) -> String {
-        String::from("JiNP")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("J") + &i.to_string() + &String::from("NP")
     }
 }
 

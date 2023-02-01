@@ -126,7 +126,8 @@ impl Operation for CMPi {
         OperationResult::from_args(self.execution_time, args)
     }
     fn get_name(&self) -> String {
-        String::from("CMPi")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("CMP") + &i.to_string() 
     }
 }
 

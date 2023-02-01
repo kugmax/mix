@@ -35,7 +35,7 @@ fn enter(instruction: Word, op_sing: Sign, r_type: RegisterType, reg: &mut Regis
         return;
     }
 
-    let mut ra = reg.get_reg_by_type(r_type);
+    let mut ra = Word::new(0);
     ra.set_sign(sign);
     reg.set_reg_by_type(r_type, ra);
 }
@@ -135,7 +135,8 @@ impl Operation for ENTi {
         OperationResult::from_args(self.execution_time, args)
     }
     fn get_name(&self) -> String {
-        String::from("ENTi")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("ENT") + &i.to_string() 
     }
 }
 
@@ -236,7 +237,8 @@ impl Operation for ENNi {
         OperationResult::from_args(self.execution_time, args)
     }
     fn get_name(&self) -> String {
-        String::from("ENNi")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("ENN") + &i.to_string() 
     }
 }
 
@@ -272,14 +274,14 @@ mod tests {
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENTA::new(Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48));
         op.execute(args);
-        assert_eq!(r.get_a(), Word::new_from_signed(2_001));
+        assert_eq!(r.get_a(), Word::new_from_signed(0));
 
         let mut instruction = Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48);
         instruction.set_sign(-1);
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENTA::new(instruction);
         op.execute(args);
-        assert_eq!(r.get_a(), Word::new_from_signed(-2_001));
+        assert_eq!(r.get_a(), Word::new(2147483648));
     }
 
     #[test]
@@ -331,14 +333,14 @@ mod tests {
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENTX::new(Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48));
         op.execute(args);
-        assert_eq!(r.get_x(), Word::new_from_signed(2_001));
+        assert_eq!(r.get_x(), Word::new_from_signed(0));
 
         let mut instruction = Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48);
         instruction.set_sign(-1);
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENTX::new(instruction);
         op.execute(args);
-        assert_eq!(r.get_x(), Word::new_from_signed(-2_001));
+        assert_eq!(r.get_x(), Word::new(2147483648));
     }
 
     #[test]
@@ -423,14 +425,14 @@ mod tests {
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENNA::new(Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48));
         op.execute(args);
-        assert_eq!(r.get_a(), Word::new_from_signed(-2_001));
+        assert_eq!(r.get_a(), Word::new(2147483648));
 
         let mut instruction = Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48);
         instruction.set_sign(-1);
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENNA::new(instruction);
         op.execute(args);
-        assert_eq!(r.get_a(), Word::new_from_signed(2_001));
+        assert_eq!(r.get_a(), Word::new_from_signed(0));
     }
 
     #[test]
@@ -481,14 +483,14 @@ mod tests {
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENNX::new(Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48));
         op.execute(args);
-        assert_eq!(r.get_x(), Word::new_from_signed(-2_001));
+        assert_eq!(r.get_x(), Word::new(2147483648));
 
         let mut instruction = Word::new_instruction(0, 0, WordAccess::new_by_spec(2), 48);
         instruction.set_sign(-1);
         let args = OperationArgs::new(1, &mut m, &mut r);
         let op = ENNX::new(instruction);
         op.execute(args);
-        assert_eq!(r.get_x(), Word::new_from_signed(2_001));
+        assert_eq!(r.get_x(), Word::new_from_signed(0));
     }
 
     #[test]

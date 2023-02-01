@@ -198,7 +198,8 @@ impl Operation for INCi {
     }
 
     fn get_name(&self) -> String {
-        String::from("INCi")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("INC") + &i.to_string() 
     }
 }
 
@@ -244,7 +245,8 @@ impl Operation for DECi {
     }
 
     fn get_name(&self) -> String {
-        String::from("DECi")
+        let i = (self.instruction.get_c() - self.code as u8);
+        String::from("DEC") + &i.to_string() 
     }
 }
 

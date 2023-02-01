@@ -113,7 +113,6 @@ impl Operations {
     fn get_operation(&self, instruction: Word) -> Box<dyn Operation> {
         let code = instruction.get_c();
         let f = instruction.get_byte(4);
-        // println!("op: {code} {f}");
         return match code {
             0 => Box::new(NOP::new(instruction)),
 
