@@ -31,64 +31,76 @@ fn store(instruction: impl Instruction, from: Word, mem: &mut Memory, reg: &Regi
 pub struct STA {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl STA {
-    pub fn new() -> STA {
+    pub fn new(instruction: Word) -> STA {
         STA {
             code: 24,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for STA {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        store(args.instruction, args.reg.get_a(), args.mem, args.reg);
+        store(self.instruction, args.reg.get_a(), args.mem, args.reg);
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("STA")
     }
 }
 
 pub struct STX {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl STX {
-    pub fn new() -> STX {
+    pub fn new(instruction: Word) -> STX {
         STX {
             code: 31,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for STX {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        store(args.instruction, args.reg.get_x(), args.mem, args.reg);
+        store(self.instruction, args.reg.get_x(), args.mem, args.reg);
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("STX")
     }
 }
 
 pub struct STi {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl STi {
-    pub fn new() -> STi {
+    pub fn new(instruction: Word) -> STi {
         STi {
             code: 24,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for STi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let addr = get_indexed_addr(args.instruction, args.reg) as usize;
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
-        let f = args.instruction.get_f();
+        let addr = get_indexed_addr(self.instruction, args.reg) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
+        let f = self.instruction.get_f();
 
         let from = args.reg.get_i(i);
         let mut to = args.mem.get(addr);
@@ -113,29 +125,34 @@ impl Operation for STi {
 
         OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("STi")
+    }
 }
 
 pub struct STJ {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl STJ {
-    pub fn new() -> STJ {
+    pub fn new(instruction: Word) -> STJ {
         STJ {
             code: 32,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for STJ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let addr = get_indexed_addr(args.instruction, args.reg) as usize;
+        let addr = get_indexed_addr(self.instruction, args.reg) as usize;
 
-        let is_set_sign = args.instruction.get_f().left == 0;
-        let left = args.instruction.get_f().left;
-        let right = args.instruction.get_f().right;
+        let is_set_sign = self.instruction.get_f().left == 0;
+        let left = self.instruction.get_f().left;
+        let right = self.instruction.get_f().right;
 
         let from = args.reg.get_j();
         let mut to = args.mem.get(addr);
@@ -156,26 +173,34 @@ impl Operation for STJ {
 
         OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("STJ")
+    }
 }
 
 pub struct STZ {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl STZ {
-    pub fn new() -> STZ {
+    pub fn new(instruction: Word) -> STZ {
         STZ {
             code: 33,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for STZ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        store(args.instruction, Word::new(0), args.mem, args.reg);
+        store(self.instruction, Word::new(0), args.mem, args.reg);
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("STZ")
     }
 }
 
@@ -198,8 +223,6 @@ mod tests {
 
     #[test]
     fn sta() {
-        let store = STA::new();
-
         let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
         let r_initial = Word::new_by_bytes(0, &[6, 7, 8, 9, 0]);
 
@@ -214,70 +237,44 @@ mod tests {
         r.set_a(r_initial);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 6, 7, 8, 9, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STA::new(Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 6, 7, 8, 9, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STA::new(Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 2, 3, 4, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(2, 2), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STA::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 2), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 0, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(2, 3), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STA::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 3), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 9, 0, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 0, 2, 3, 4, 5);
     }
 
     #[test]
     fn stx() {
-        let store = STX::new();
-
         let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
         let r_initial = Word::new_by_bytes(0, &[6, 7, 8, 9, 0]);
 
@@ -292,69 +289,44 @@ mod tests {
         r.set_x(r_initial);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 6, 7, 8, 9, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 6, 7, 8, 9, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 2, 3, 4, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(2, 2), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 2), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 0, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(2, 3), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 3), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 9, 0, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 0, 2, 3, 4, 5);
     }
 
     #[test]
     fn sti() {
-        let store = STi::new();
         let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
         let r_initial = ShortWord::new_by_bytes(0, &[6, 7]);
 
@@ -364,50 +336,32 @@ mod tests {
         r.set_i(2, r_initial);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 26),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STi::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 26));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 0, 0, 0, 6, 7);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(4, 5), 26),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STi::new(Word::new_instruction(2_000, 0, WordAccess::new(4, 5), 26));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 6, 7);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(4, 4), 26),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STi::new(Word::new_instruction(2_000, 0, WordAccess::new(4, 4), 26));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 7, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 26),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STi::new(Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 26));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 4, 7);
     }
 
     #[test]
     fn stj() {
-        let store = STJ::new();
-
         let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
         let r_initial = ShortWord::new_by_bytes(0, &[6, 7]);
 
@@ -417,49 +371,32 @@ mod tests {
         r.set_j(r_initial);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 2), 24),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 2), 24));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 6, 7, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(1, 2), 24),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(1, 2), 24));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 6, 7, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(1, 1), 24),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(1, 1), 24));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 7, 2, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(2, 2), 24),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STJ::new(Word::new_instruction(2_000, 2, WordAccess::new(2, 2), 24));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 7, 3, 4, 5);
     }
 
     #[test]
     fn stz() {
-        let store = STZ::new();
         let m_initial = Word::new_by_bytes(-1, &[1, 2, 3, 4, 5]);
 
         let mut m = Memory::new();
@@ -467,62 +404,38 @@ mod tests {
         let mut r = Registers::new();
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 33),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STZ::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 33));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 0, 0, 0, 0, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 33),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STZ::new(Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 33));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 0, 0, 0, 0, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 33),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STZ::new(Word::new_instruction(2_000, 0, WordAccess::new(5, 5), 33));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 2, 3, 4, 0);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(2, 2), 33),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STZ::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 2), 33));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 0, 3, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(2, 3), 33),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STZ::new(Word::new_instruction(2_000, 0, WordAccess::new(2, 3), 33));
         store.execute(args);
         assert_by_bytes(m.get(2_000), -1, 1, 0, 0, 4, 5);
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 33),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STZ::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 1), 33));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 0, 2, 3, 4, 5);
     }
@@ -539,13 +452,8 @@ mod tests {
         r.set_i(3, ShortWord::new(10));
 
         m.set(2_000, m_initial.get());
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_990, 3, WordAccess::new(0, 5), 8),
-            &mut m,
-            &mut r,
-        );
-        let store = STA::new();
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let store = STA::new(Word::new_instruction(1_990, 3, WordAccess::new(0, 5), 8));
         store.execute(args);
         assert_by_bytes(m.get(2_000), 0, 6, 7, 8, 9, 0);
     }

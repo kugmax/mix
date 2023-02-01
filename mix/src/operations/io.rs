@@ -21,18 +21,20 @@ impl IO_UNIT {}
 pub struct IN {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 impl IN {
-    pub fn new() -> IN {
+    pub fn new(instruction: Word) -> IN {
         IN {
             code: 36,
             execution_time: 1, // + T
+            instruction: instruction,
         }
     }
 }
 impl Operation for IN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let io_unit = args.instruction.get_byte(4);
+        let io_unit = self.instruction.get_byte(4);
         if io_unit != 18 {
             panic!("unsupported io unit {io_unit}");
         }
@@ -40,17 +42,22 @@ impl Operation for IN {
 
         // OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("IN")
+    }
 }
 
 pub struct OUT {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 impl OUT {
-    pub fn new() -> OUT {
+    pub fn new(instruction: Word) -> OUT {
         OUT {
             code: 37,
             execution_time: 1, // + T
+            instruction: instruction,
         }
     }
 
@@ -73,12 +80,12 @@ impl OUT {
 }
 impl Operation for OUT {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let io_unit = args.instruction.get_byte(4);
+        let io_unit = self.instruction.get_byte(4);
         if io_unit != 18 {
             panic!("unsupported io unit {io_unit}");
         }
         let unit_block = 24;
-        let start_from = get_indexed_addr(args.instruction, args.reg);
+        let start_from = get_indexed_addr(self.instruction, args.reg);
 
         let mut out_buffer = Vec::new();
         for i in 0..unit_block {
@@ -90,24 +97,29 @@ impl Operation for OUT {
 
         OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("OUT")
+    }
 }
 
 pub struct IOC {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 impl IOC {
-    pub fn new() -> IOC {
+    pub fn new(instruction: Word) -> IOC {
         IOC {
             code: 35,
             execution_time: 1, // + T
+            instruction: instruction,
         }
     }
 
     fn write(&self, io_unit: u8) -> io::Result<()> {
         // let path = "/home/max/Documents/Projects.git/mix/mix/target/";
         // let mut file = File::create(path.to_string() + &IO_FILE_PREFIX.to_string() + &io_unit.to_string())?;
-      
+
         let path = IO_FILE_PREFIX.to_string() + &io_unit.to_string();
         let mut file = File::options().create(true).append(true).open(path)?;
 
@@ -118,13 +130,16 @@ impl IOC {
 }
 impl Operation for IOC {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let io_unit = args.instruction.get_byte(4);
+        let io_unit = self.instruction.get_byte(4);
         if io_unit != 18 {
             panic!("unsupported io unit {io_unit}");
         }
         self.write(io_unit);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("IOC")
     }
 }
 
@@ -134,7 +149,6 @@ mod tests {
 
     // #[test]
     fn out() {
-        let op = OUT::new();
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -145,13 +159,13 @@ mod tests {
         m.set_bytes(1, 0, 0, 26, 16, 19, 13);
         m.set_bytes(2, 0, 4, 0, 0, 0, 0);
 
-        let args = OperationArgs::new(1, Word::new_by_bytes(0, &[0, 0, 0, 18, 37]), &mut m, &mut r);
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = OUT::new(Word::new_by_bytes(0, &[0, 0, 0, 18, 37]));
         op.execute(args);
     }
 
     // #[test]
     fn ioc_out() {
-        let op = OUT::new();
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -162,16 +176,16 @@ mod tests {
         m.set_bytes(1, 0, 0, 26, 16, 19, 13);
         m.set_bytes(2, 0, 4, 0, 0, 0, 0);
 
-        let args = OperationArgs::new(1, Word::new_by_bytes(0, &[0, 0, 0, 18, 37]), &mut m, &mut r);
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = OUT::new(Word::new_by_bytes(0, &[0, 0, 0, 18, 37]));
         op.execute(args);
 
-        let ioc = IOC::new();
-
-        let args = OperationArgs::new(1, Word::new_by_bytes(0, &[0, 0, 0, 18, 37]), &mut m, &mut r);
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let ioc = IOC::new(Word::new_by_bytes(0, &[0, 0, 0, 18, 37]));
         ioc.execute(args);
 
-        let args = OperationArgs::new(1, Word::new_by_bytes(0, &[0, 0, 0, 18, 37]), &mut m, &mut r);
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = OUT::new(Word::new_by_bytes(0, &[0, 0, 0, 18, 37]));
         op.execute(args);
-
     }
 }

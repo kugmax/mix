@@ -1,44 +1,45 @@
 use crate::memory::word::Word;
 use crate::memory::word_access::WordAccess;
-use crate::memory::Instruction;
 use crate::memory::Bytes;
+use crate::memory::Instruction;
 use crate::memory::Memory;
 use crate::operations::address_arithmetic::*;
 use crate::operations::address_transfer::*;
 use crate::operations::arithmetic::*;
 use crate::operations::compare::*;
+use crate::operations::conversion::*;
+use crate::operations::io::*;
 use crate::operations::jump::*;
 use crate::operations::load::*;
 use crate::operations::miscellaneous::*;
 use crate::operations::store::*;
-use crate::operations::io::*;
-use crate::operations::conversion::*;
 use crate::registers::Registers;
 
 pub mod address_arithmetic;
 pub mod address_transfer;
 pub mod arithmetic;
 pub mod compare;
+pub mod conversion;
+pub mod io;
 pub mod jump;
 pub mod load;
 pub mod miscellaneous;
 pub mod store;
-pub mod io;
-pub mod conversion;
 
 // pub struct OperationDescription {
-// code: u32,
-// execution_time: u32,
-// f: u8,
+    // code: u32,
+    // execution_time: u32,
+    // f: u8,
 // }
 
 trait Operation {
     fn execute(&self, args: OperationArgs) -> OperationResult;
+    fn get_name(&self) -> String;
 }
 
 pub struct OperationArgs<'a> {
     addr: u32,
-    instruction: Word,
+    // instruction: Word,
     mem: &'a mut Memory,
     reg: &'a mut Registers,
 }
@@ -46,13 +47,13 @@ pub struct OperationArgs<'a> {
 impl<'a> OperationArgs<'a> {
     pub fn new(
         addr: u32,
-        instruction: Word,
+        // instruction: Word,
         mem: &'a mut Memory,
         reg: &'a mut Registers,
     ) -> OperationArgs<'a> {
         OperationArgs {
             addr,
-            instruction,
+            // instruction,
             mem,
             reg,
         }
@@ -93,110 +94,122 @@ impl Operations {
         mem: &mut Memory,
         reg: &mut Registers,
     ) -> OperationResult {
-        let op = self.get_operation(instruction.get_c(), instruction.get_byte(4));
+        let op = self.get_operation(instruction);
 
-        let args = OperationArgs::new(addr, instruction, mem, reg);
+        // println!(
+            // "{}| {}: {} {} {} {}",
+            // addr,
+            // op.get_name(),
+            // instruction.get_address(),
+            // instruction.get_i(),
+            // instruction.get_byte(4),
+            // instruction.get_c()
+        // );
+
+        let args = OperationArgs::new(addr, mem, reg);
         op.execute(args)
     }
 
-    fn get_operation(&self, code: u8, f: u8) -> Box<dyn Operation> {
+    fn get_operation(&self, instruction: Word) -> Box<dyn Operation> {
+        let code = instruction.get_c();
+        let f = instruction.get_byte(4);
         // println!("op: {code} {f}");
         return match code {
-            0 => Box::new(NOP::new()),
+            0 => Box::new(NOP::new(instruction)),
 
             // arithmetic
-            1 => Box::new(ADD::new()),
-            2 => Box::new(SUB::new()),
-            3 => Box::new(MUL::new()),
-            4 => Box::new(DIV::new()),
+            1 => Box::new(ADD::new(instruction)),
+            2 => Box::new(SUB::new(instruction)),
+            3 => Box::new(MUL::new(instruction)),
+            4 => Box::new(DIV::new(instruction)),
 
-            5 if f == 0 => Box::new(NUM::new()),
-            5 if f == 1 => Box::new(CHAR::new()),
-            5 if f == 2 => Box::new(HLT::new()),
+            5 if f == 0 => Box::new(NUM::new(instruction)),
+            5 if f == 1 => Box::new(CHAR::new(instruction)),
+            5 if f == 2 => Box::new(HLT::new(instruction)),
 
             // shift
-            6 if f == 0 => Box::new(SLA::new()),
-            6 if f == 1 => Box::new(SRA::new()),
-            6 if f == 2 => Box::new(SLAX::new()),
-            6 if f == 3 => Box::new(SRAX::new()),
-            6 if f == 4 => Box::new(SLC::new()),
-            6 if f == 5 => Box::new(SRC::new()),
+            6 if f == 0 => Box::new(SLA::new(instruction)),
+            6 if f == 1 => Box::new(SRA::new(instruction)),
+            6 if f == 2 => Box::new(SLAX::new(instruction)),
+            6 if f == 3 => Box::new(SRAX::new(instruction)),
+            6 if f == 4 => Box::new(SLC::new(instruction)),
+            6 if f == 5 => Box::new(SRC::new(instruction)),
 
-            7 => Box::new(MOVE::new()),
+            7 => Box::new(MOVE::new(instruction)),
 
             // load
-            8 => Box::new(LDA::new()),
-            9..=14 => Box::new(LDi::new()),
-            15 => Box::new(LDX::new()),
-            16 => Box::new(LDAN::new()),
-            17..=22 => Box::new(LDiN::new()),
-            23 => Box::new(LDXN::new()),
+            8 => Box::new(LDA::new(instruction)),
+            9..=14 => Box::new(LDi::new(instruction)),
+            15 => Box::new(LDX::new(instruction)),
+            16 => Box::new(LDAN::new(instruction)),
+            17..=22 => Box::new(LDiN::new(instruction)),
+            23 => Box::new(LDXN::new(instruction)),
 
             // store
-            24 => Box::new(STA::new()),
-            25..=30 => Box::new(STi::new()),
-            31 => Box::new(STX::new()),
-            32 => Box::new(STJ::new()),
-            33 => Box::new(STZ::new()),
+            24 => Box::new(STA::new(instruction)),
+            25..=30 => Box::new(STi::new(instruction)),
+            31 => Box::new(STX::new(instruction)),
+            32 => Box::new(STJ::new(instruction)),
+            33 => Box::new(STZ::new(instruction)),
 
             //IO
-            35 => Box::new(IOC::new()),
-            36 => Box::new(IN::new()),
-            37 => Box::new(OUT::new()),
+            35 => Box::new(IOC::new(instruction)),
+            36 => Box::new(IN::new(instruction)),
+            37 => Box::new(OUT::new(instruction)),
 
             // jump
-            39 if f == 0 => Box::new(JMP::new()),
-            39 if f == 1 => Box::new(JSJ::new()),
-            39 if f == 2 => Box::new(JOV::new()),
-            39 if f == 3 => Box::new(JNOV::new()),
-            39 if f == 4 => Box::new(JL::new()),
-            39 if f == 5 => Box::new(JE::new()),
-            39 if f == 6 => Box::new(JG::new()),
-            39 if f == 7 => Box::new(JGE::new()),
-            39 if f == 8 => Box::new(JNE::new()),
-            39 if f == 9 => Box::new(JLE::new()),
+            39 if f == 0 => Box::new(JMP::new(instruction)),
+            39 if f == 1 => Box::new(JSJ::new(instruction)),
+            39 if f == 2 => Box::new(JOV::new(instruction)),
+            39 if f == 3 => Box::new(JNOV::new(instruction)),
+            39 if f == 4 => Box::new(JL::new(instruction)),
+            39 if f == 5 => Box::new(JE::new(instruction)),
+            39 if f == 6 => Box::new(JG::new(instruction)),
+            39 if f == 7 => Box::new(JGE::new(instruction)),
+            39 if f == 8 => Box::new(JNE::new(instruction)),
+            39 if f == 9 => Box::new(JLE::new(instruction)),
 
-            40 if f == 0 => Box::new(JAN::new()),
-            40 if f == 1 => Box::new(JAZ::new()),
-            40 if f == 2 => Box::new(JAP::new()),
-            40 if f == 3 => Box::new(JANN::new()),
-            40 if f == 4 => Box::new(JANZ::new()),
-            40 if f == 5 => Box::new(JANP::new()),
+            40 if f == 0 => Box::new(JAN::new(instruction)),
+            40 if f == 1 => Box::new(JAZ::new(instruction)),
+            40 if f == 2 => Box::new(JAP::new(instruction)),
+            40 if f == 3 => Box::new(JANN::new(instruction)),
+            40 if f == 4 => Box::new(JANZ::new(instruction)),
+            40 if f == 5 => Box::new(JANP::new(instruction)),
 
-            41..=46 if f == 0 => Box::new(JiN::new()),
-            41..=46 if f == 1 => Box::new(JiZ::new()),
-            41..=46 if f == 2 => Box::new(JiP::new()),
-            41..=46 if f == 3 => Box::new(JiNN::new()),
-            41..=46 if f == 4 => Box::new(JiNZ::new()),
-            41..=46 if f == 5 => Box::new(JiNP::new()),
+            41..=46 if f == 0 => Box::new(JiN::new(instruction)),
+            41..=46 if f == 1 => Box::new(JiZ::new(instruction)),
+            41..=46 if f == 2 => Box::new(JiP::new(instruction)),
+            41..=46 if f == 3 => Box::new(JiNN::new(instruction)),
+            41..=46 if f == 4 => Box::new(JiNZ::new(instruction)),
+            41..=46 if f == 5 => Box::new(JiNP::new(instruction)),
 
-            47 if f == 0 => Box::new(JXN::new()),
-            47 if f == 1 => Box::new(JXZ::new()),
-            47 if f == 2 => Box::new(JXP::new()),
-            47 if f == 3 => Box::new(JXNN::new()),
-            47 if f == 4 => Box::new(JXNZ::new()),
-            47 if f == 5 => Box::new(JXNP::new()),
+            47 if f == 0 => Box::new(JXN::new(instruction)),
+            47 if f == 1 => Box::new(JXZ::new(instruction)),
+            47 if f == 2 => Box::new(JXP::new(instruction)),
+            47 if f == 3 => Box::new(JXNN::new(instruction)),
+            47 if f == 4 => Box::new(JXNZ::new(instruction)),
+            47 if f == 5 => Box::new(JXNP::new(instruction)),
 
             // address_transfer
-            48 if f == 0 => Box::new(INCA::new()),
-            48 if f == 1 => Box::new(DECA::new()),
-            48 if f == 2 => Box::new(ENTA::new()),
-            48 if f == 3 => Box::new(ENNA::new()),
+            48 if f == 0 => Box::new(INCA::new(instruction)),
+            48 if f == 1 => Box::new(DECA::new(instruction)),
+            48 if f == 2 => Box::new(ENTA::new(instruction)),
+            48 if f == 3 => Box::new(ENNA::new(instruction)),
 
-            47..=54 if f == 0 => Box::new(INCi::new()),
-            47..=54 if f == 1 => Box::new(DECi::new()),
-            47..=54 if f == 2 => Box::new(ENTi::new()),
-            47..=54 if f == 3 => Box::new(ENNi::new()),
+            47..=54 if f == 0 => Box::new(INCi::new(instruction)),
+            47..=54 if f == 1 => Box::new(DECi::new(instruction)),
+            47..=54 if f == 2 => Box::new(ENTi::new(instruction)),
+            47..=54 if f == 3 => Box::new(ENNi::new(instruction)),
 
-            55 if f == 0 => Box::new(INCX::new()),
-            55 if f == 1 => Box::new(DECX::new()),
-            55 if f == 2 => Box::new(ENTX::new()),
-            55 if f == 3 => Box::new(ENNX::new()),
+            55 if f == 0 => Box::new(INCX::new(instruction)),
+            55 if f == 1 => Box::new(DECX::new(instruction)),
+            55 if f == 2 => Box::new(ENTX::new(instruction)),
+            55 if f == 3 => Box::new(ENNX::new(instruction)),
 
             // compare
-            56 => Box::new(CMPA::new()),
-            57..=62 => Box::new(CMPi::new()),
-            63 => Box::new(CMPX::new()),
+            56 => Box::new(CMPA::new(instruction)),
+            57..=62 => Box::new(CMPi::new(instruction)),
+            63 => Box::new(CMPX::new(instruction)),
 
             _ => panic!("unsupported operation code {code}"),
         };
@@ -205,7 +218,6 @@ impl Operations {
 
 pub fn get_memory_cell(instruction: impl Instruction, mem: &Memory, reg: &Registers) -> Word {
     let mut addr = instruction.get_address();
-    addr = addr.abs();
 
     let i = instruction.get_i();
     if i != 0 {
@@ -217,7 +229,6 @@ pub fn get_memory_cell(instruction: impl Instruction, mem: &Memory, reg: &Regist
 
 pub fn get_indexed_addr(instruction: impl Instruction, reg: &Registers) -> i32 {
     let mut addr = instruction.get_address();
-    addr = addr.abs();
 
     let i = instruction.get_i();
     if i != 0 {

@@ -1,8 +1,8 @@
 use crate::memory::short_word::ShortWord;
 use crate::memory::word::Word;
-use crate::memory::Memory;
-use crate::memory::Instruction;
 use crate::memory::Bytes;
+use crate::memory::Instruction;
+use crate::memory::Memory;
 use crate::operations::Operations;
 use crate::registers::Registers;
 
@@ -21,7 +21,7 @@ impl Processor {
 
     pub fn execute(&mut self, mem: &mut Memory, reg: &mut Registers) {
         let op = Operations::new();
-
+        let mut count = 0;
         while true {
             if self.addr > 3_999 {
                 break;
@@ -29,20 +29,19 @@ impl Processor {
 
             let instruction = mem.get(self.addr as usize);
 
-            println!(
-            "{}:{} {} {} {}",
-            self.addr,
-            instruction.get_address(),
-            instruction.get_i(),
-            instruction.get_byte(4),
-            instruction.get_c()
-            );
-
             let result = op.execute(self.addr, instruction, mem, reg);
 
-            println!("{:#?}", reg);
+            // println!("      {:#?}", reg);
+            // for i in 0..10 {
+                // println!("      {i}={}", mem.get(i as usize).get_signed_value());
+            // }
 
             self.addr = result.next_addr_instruction;
+
+            count += 1;
+            if count > 50 {
+                break;
+            }
         }
     }
 }
@@ -51,7 +50,7 @@ impl Processor {
 mod tests {
     use super::*;
 
-    // #[test]
+    #[test]
     fn find_maximum() {
         let mut m = Memory::new();
         let mut r = Registers::new();
@@ -96,7 +95,7 @@ mod tests {
         assert_eq!(max, 33);
     }
 
-    // #[test]
+    #[test]
     fn program_p() {
         let mut m = Memory::new();
         let mut r = Registers::new();
@@ -112,7 +111,7 @@ mod tests {
         m.set_instr_as_bytes(3_006, 2, 0, 0, 50);
         m.set_instr_as_bytes(3_007, 2, 0, 2, 51);
         m.set_instr_as_bytes(3_008, 0, 0, 2, 48);
-        m.set_instr_as_bytes(3_009, 0, 0, 2, 55);
+        m.set_instr_as_bytes(3_009, 0, 2, 2, 55);
         m.set_instr_as_bytes(3_010, -1, 3, 5, 4);
         m.set_instr_as_bytes(3_011, 3006, 0, 1, 47);
         m.set_instr_as_bytes(3_012, -1, 3, 5, 56);
@@ -132,7 +131,9 @@ mod tests {
         m.set_instr_as_bytes(3_026, 0, 4, 18, 37);
         m.set_instr_as_bytes(3_027, 24, 4, 5, 12);
         m.set_instr_as_bytes(3_028, 3019, 0, 0, 45);
-        m.set_instr_as_bytes(3_029, 0, 0, 2, 5);
+        m.set_instr_as_bytes(3_029, 0, 0, 2, 5); //HLT
+
+        m.set_instr_as_bytes(3_030, 4_000, 0, 0, 39); //exit
 
         m.set_word(0_000, Word::new_from_signed(2));
 
@@ -146,9 +147,12 @@ mod tests {
         m.set_word(2_049, Word::new_from_signed(2010));
         m.set_word(2_050, Word::new_from_signed(3));
         m.set_word(2_051, Word::new_from_signed(-499));
+        // m.set_word(2_051, Word::new_from_signed(-10));
 
         // r.set_i(1, ShortWord::new(10));
-        r.set_j(ShortWord::new(4_000));
+        // r.set_j(ShortWord::new(4_000));
+        // r.set_i(1, ShortWord::new(1));
+        // r.set_i(2, ShortWord::new(5));
 
         p.execute(&mut m, &mut r);
     }

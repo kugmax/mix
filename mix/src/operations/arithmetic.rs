@@ -38,13 +38,15 @@ fn sum(
 pub struct ADD {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl ADD {
-    pub fn new() -> ADD {
+    pub fn new(instruction: Word) -> ADD {
         ADD {
             code: 1,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
@@ -52,22 +54,27 @@ impl ADD {
 impl Operation for ADD {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let mut add = |v1, v2| v1 + v2;
-        sum(args.instruction, &mut add, args.mem, args.reg);
+        sum(self.instruction, &mut add, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("ADD")
     }
 }
 
 pub struct SUB {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl SUB {
-    pub fn new() -> SUB {
+    pub fn new(instruction: Word) -> SUB {
         SUB {
             code: 2,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
@@ -75,30 +82,35 @@ impl SUB {
 impl Operation for SUB {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let mut sub = |v1, v2| v1 - v2;
-        sum(args.instruction, &mut sub, args.mem, args.reg);
+        sum(self.instruction, &mut sub, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("SUB")
     }
 }
 
 pub struct MUL {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl MUL {
-    pub fn new() -> MUL {
+    pub fn new(instruction: Word) -> MUL {
         MUL {
             code: 3,
             execution_time: 10,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for MUL {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let f = args.instruction.get_f();
-        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
+        let f = self.instruction.get_f();
+        let mem_cell = get_memory_cell(self.instruction, args.mem, args.reg);
 
         let value: i64 = Word::new(mem_cell.get_by_access(f)).get_signed_value() as i64;
         let result: i64 = args.reg.get_a().get_signed_value() as i64 * value;
@@ -109,26 +121,31 @@ impl Operation for MUL {
 
         OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("MUL")
+    }
 }
 
 pub struct DIV {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl DIV {
-    pub fn new() -> DIV {
+    pub fn new(instruction: Word) -> DIV {
         DIV {
             code: 4,
             execution_time: 12,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for DIV {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let f = args.instruction.get_f();
-        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
+        let f = self.instruction.get_f();
+        let mem_cell = get_memory_cell(self.instruction, args.mem, args.reg);
 
         let value = Word::new(mem_cell.get_by_access(f)).get_signed_value();
 
@@ -157,6 +174,9 @@ impl Operation for DIV {
 
         OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("DIV")
+    }
 }
 
 #[cfg(test)]
@@ -165,8 +185,6 @@ mod tests {
 
     #[test]
     fn add() {
-        let operation = ADD::new();
-
         let mut m = Memory::new();
 
         let mem_value = Word::new(1_001);
@@ -183,42 +201,26 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new(1_001));
         assert_eq!(r.is_overflow(), false);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new(0));
         assert_eq!(r.is_overflow(), false);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_002, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_002, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new_from_signed(MAX_5_BYTES));
         assert_eq!(r.is_overflow(), false);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new_from_signed(0));
         assert_eq!(r.is_overflow(), false);
@@ -226,8 +228,6 @@ mod tests {
 
     #[test]
     fn add_result_is_0() {
-        let operation = ADD::new();
-
         let mut m = Memory::new();
 
         let mem_value = Word::new(1);
@@ -238,42 +238,26 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), false);
         assert_eq!(r.get_a(), Word::new_from_signed(-1));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), false);
         assert_eq!(r.get_a(), Word::new_by_bytes(-1, &[0, 0, 0, 0, 0]));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), false);
         assert_eq!(r.get_a(), Word::new_from_signed(1));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), false);
         assert_eq!(r.get_a(), Word::new_by_bytes(0, &[0, 0, 0, 0, 0]));
@@ -281,8 +265,6 @@ mod tests {
 
     #[test]
     fn add_overflow() {
-        let operation = ADD::new();
-
         let mut m = Memory::new();
 
         let mem_value = Word::new(2);
@@ -299,42 +281,26 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_002, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_002, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), false);
         assert_eq!(r.get_a(), Word::new_from_signed(MAX_5_BYTES));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), true);
         assert_eq!(r.get_a(), Word::new(0));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), true);
         assert_eq!(r.get_a(), Word::new_from_signed(-MAX_5_BYTES));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = ADD::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.is_overflow(), true);
         assert_eq!(r.get_a(), Word::new(0));
@@ -342,8 +308,6 @@ mod tests {
 
     #[test]
     fn sub() {
-        let operation = SUB::new();
-
         let mut m = Memory::new();
 
         let mem_value = Word::new(1_001);
@@ -360,42 +324,26 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = SUB::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new(1_001));
         assert_eq!(r.is_overflow(), false);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = SUB::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new(0));
         assert_eq!(r.is_overflow(), false);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = SUB::new(Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new_from_signed(MAX_5_BYTES));
         assert_eq!(r.is_overflow(), false);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_002, 0, WordAccess::new(0, 5), 1),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = SUB::new(Word::new_instruction(2_002, 0, WordAccess::new(0, 5), 1));
         operation.execute(args);
         assert_eq!(r.get_a(), Word::new_from_signed(0));
         assert_eq!(r.is_overflow(), false);
@@ -403,31 +351,21 @@ mod tests {
 
     #[test]
     fn mul() {
-        let operation = MUL::new();
-
         let mut m = Memory::new();
         let mut r = Registers::new();
 
         m.set(3_000, Word::new_from_signed(MAX_5_BYTES).get());
         r.set_a(Word::new_from_signed(MAX_5_BYTES));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = MUL::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3));
         operation.execute(args);
         assert_eq!(0b00_111111_111111_111111_111111_111110, r.get_a().get());
         assert_eq!(0b00_000000_000000_000000_000000_000001, r.get_x().get());
 
         r.set_a(Word::new_from_signed(-MAX_5_BYTES));
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = MUL::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 3));
         operation.execute(args);
         assert_eq!(0b10_111111_111111_111111_111111_111110, r.get_a().get());
         assert_eq!(0b10_000000_000000_000000_000000_000001, r.get_x().get());
@@ -438,8 +376,6 @@ mod tests {
 
     #[test]
     fn div() {
-        let operation = DIV::new();
-
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -447,12 +383,8 @@ mod tests {
         r.set_a(Word::new(0));
         r.set_x(Word::new(10));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
         operation.execute(args);
         assert_eq!(5, r.get_a().get());
         assert_eq!(0, r.get_x().get());
@@ -461,12 +393,8 @@ mod tests {
         r.set_a(Word::new(0));
         r.set_x(Word::new(10));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
         operation.execute(args);
         assert_eq!(0b10_000000_000000_000000_000000_000101, r.get_a().get());
         assert_eq!(0b00_000000_000000_000000_000000_000000, r.get_x().get());
@@ -475,12 +403,8 @@ mod tests {
         r.set_a(Word::new_from_signed(-1));
         r.set_x(Word::new(11));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
         operation.execute(args);
         assert_eq!(0b00_100000_000000_000000_000000_000101, r.get_a().get());
         assert_eq!(0b10_000000_000000_000000_000000_000001, r.get_x().get());
@@ -489,12 +413,8 @@ mod tests {
         r.set_a(Word::new_from_signed(-1));
         r.set_x(Word::new(11));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
         operation.execute(args);
         assert_eq!(true, r.is_overflow());
         assert_eq!(0, r.get_a().get());
@@ -504,12 +424,8 @@ mod tests {
         r.set_a(Word::new_from_signed(-2));
         r.set_x(Word::new(0));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = DIV::new(Word::new_instruction(3_000, 0, WordAccess::new(0, 5), 4));
         operation.execute(args);
         assert_eq!(true, r.is_overflow());
         assert_eq!(0, r.get_a().get());
@@ -518,8 +434,6 @@ mod tests {
 
     #[test]
     fn arithmetic_instructions_1() {
-        let op = ADD::new();
-
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -538,12 +452,8 @@ mod tests {
 
         m.set(1_000, cell.get());
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = ADD::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
 
         let mut ra = r.get_a();
@@ -554,7 +464,6 @@ mod tests {
 
     #[test]
     fn arithmetic_instructions_2() {
-        let op = SUB::new();
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -576,12 +485,8 @@ mod tests {
 
         m.set(1_000, cell.get());
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = SUB::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
 
         let mut ra = r.get_a();
@@ -593,8 +498,6 @@ mod tests {
 
     #[test]
     fn arithmetic_instructions_3() {
-        let op = MUL::new();
-
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -607,12 +510,8 @@ mod tests {
 
         m.set(1_000, cell.get());
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = MUL::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
 
         let ra = r.get_a();
@@ -634,8 +533,6 @@ mod tests {
 
     #[test]
     fn arithmetic_instructions_4() {
-        let op = MUL::new();
-
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -648,12 +545,8 @@ mod tests {
 
         m.set(1_000, cell.get());
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_000, 0, WordAccess::new(1, 1), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = MUL::new(Word::new_instruction(1_000, 0, WordAccess::new(1, 1), 0));
         op.execute(args);
 
         let ra = r.get_a();
@@ -666,8 +559,6 @@ mod tests {
 
     #[test]
     fn arithmetic_instructions_5() {
-        let op = MUL::new();
-
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -685,12 +576,8 @@ mod tests {
 
         m.set(1_000, cell.get());
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = MUL::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
 
         let mut ra = r.get_a();
@@ -710,8 +597,6 @@ mod tests {
 
     #[test]
     fn arithmetic_instructions_6() {
-        let op = DIV::new();
-
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -724,12 +609,8 @@ mod tests {
 
         m.set(1_000, cell.get());
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = DIV::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
 
         let ra = r.get_a();
@@ -743,7 +624,6 @@ mod tests {
 
     #[test]
     fn arithmetic_instructions_7() {
-        let op = DIV::new();
         let mut m = Memory::new();
         let mut r = Registers::new();
 
@@ -764,12 +644,8 @@ mod tests {
 
         m.set(1_000, cell.get());
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = DIV::new(Word::new_instruction(1_000, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
 
         let ra = r.get_a();

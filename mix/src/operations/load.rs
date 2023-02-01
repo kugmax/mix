@@ -45,84 +45,103 @@ fn load_negative(
 pub struct LDA {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl LDA {
-    pub fn new() -> LDA {
+    pub fn new(instruction: Word) -> LDA {
         LDA {
             code: 8,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for LDA {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        load(args.instruction, RegisterType::A, args.mem, args.reg);
+        load(self.instruction, RegisterType::A, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("LDA")
     }
 }
 
 pub struct LDX {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl LDX {
-    pub fn new() -> LDX {
+    pub fn new(instruction: Word) -> LDX {
         LDX {
             code: 15,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for LDX {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        load(args.instruction, RegisterType::X, args.mem, args.reg);
+        load(self.instruction, RegisterType::X, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("LDX")
     }
 }
 
 pub struct LDi {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl LDi {
-    pub fn new() -> LDi {
+    pub fn new(instruction: Word) -> LDi {
         LDi {
             code: 8,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for LDi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
-        let to = (args.instruction.get_c() - self.code as u8) as usize;
+        let mem_cell = get_memory_cell(self.instruction, args.mem, args.reg);
+        let to = (self.instruction.get_c() - self.code as u8) as usize;
 
-        let value = ShortWord::new(mem_cell.get_by_access(args.instruction.get_f()));
+        let value = ShortWord::new(mem_cell.get_by_access(self.instruction.get_f()));
+
+        // println!("### {to} {}", value.get_signed_value());
 
         args.reg.set_i(to, value);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("LDi")
     }
 }
 
 pub struct LDAN {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl LDAN {
-    pub fn new() -> LDAN {
+    pub fn new(instruction: Word) -> LDAN {
         LDAN {
             code: 16,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
@@ -130,22 +149,27 @@ impl LDAN {
 impl Operation for LDAN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let mut set_a = |w| args.reg.set_a(w);
-        load_negative(args.instruction, RegisterType::A, args.mem, args.reg);
+        load_negative(self.instruction, RegisterType::A, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("LDAN")
     }
 }
 
 pub struct LDXN {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl LDXN {
-    pub fn new() -> LDXN {
+    pub fn new(instruction: Word) -> LDXN {
         LDXN {
             code: 23,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
@@ -153,35 +177,43 @@ impl LDXN {
 impl Operation for LDXN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         let mut set_a = |w| args.reg.set_a(w);
-        load_negative(args.instruction, RegisterType::X, args.mem, args.reg);
+        load_negative(self.instruction, RegisterType::X, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("LDXN")
     }
 }
 
 pub struct LDiN {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl LDiN {
-    pub fn new() -> LDiN {
+    pub fn new(instruction: Word) -> LDiN {
         LDiN {
             code: 16,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for LDiN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
-        let value = ShortWord::new(mem_cell.get_negative_by_access(args.instruction.get_f()));
+        let mem_cell = get_memory_cell(self.instruction, args.mem, args.reg);
+        let value = ShortWord::new(mem_cell.get_negative_by_access(self.instruction.get_f()));
 
-        let to = (args.instruction.get_c() - self.code as u8) as usize;
+        let to = (self.instruction.get_c() - self.code as u8) as usize;
         args.reg.set_i(to, value);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("LDiN")
     }
 }
 
@@ -191,7 +223,6 @@ mod tests {
 
     #[test]
     fn lda() {
-        let lda = LDA::new();
         let word = Word::new_instruction(-80, 3, WordAccess::new(0, 5), 4);
 
         let mut m = Memory::new();
@@ -199,39 +230,23 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let lda = LDA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8));
         lda.execute(args);
         assert_instruction(r.get_a(), -80, 3, WordAccess::new(0, 5), 4);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let lda = LDA::new(Word::new_instruction(2_000, 0, WordAccess::new(1, 5), 8));
         lda.execute(args);
         assert_instruction(r.get_a(), 80, 3, WordAccess::new(0, 5), 4);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(3, 5), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let lda = LDA::new(Word::new_instruction(2_000, 0, WordAccess::new(3, 5), 8));
         lda.execute(args);
         assert_instruction(r.get_a(), 0, 3, WordAccess::new(0, 5), 4);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 3), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let lda = LDA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 3), 8));
         lda.execute(args);
         assert_eq!(
             r.get_a().get_by_access(WordAccess::new(0, 0)),
@@ -241,21 +256,13 @@ mod tests {
         assert_eq!(r.get_a().get_by_access(WordAccess::new(3, 4)), 80);
         assert_eq!(r.get_a().get_by_access(WordAccess::new(5, 5)), 3);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(4, 4), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let lda = LDA::new(Word::new_instruction(2_000, 0, WordAccess::new(4, 4), 8));
         lda.execute(args);
         assert_instruction(r.get_a(), 0, 0, WordAccess::new(0, 0), 5);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let lda = LDA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 8));
         lda.execute(args);
         assert_eq!(
             r.get_a().get_by_access(WordAccess::new(0, 0)),
@@ -263,12 +270,8 @@ mod tests {
         );
         assert_eq!(r.get_a().get_by_access(WordAccess::new(1, 5)), 0);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(1, 1), 8),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let lda = LDA::new(Word::new_instruction(2_000, 0, WordAccess::new(1, 1), 8));
         lda.execute(args);
         assert_eq!(
             r.get_a().get_by_access(WordAccess::new(0, 0)),
@@ -287,13 +290,8 @@ mod tests {
         let mut r = Registers::new();
         r.set_i(1, ShortWord::new(10));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 8),
-            &mut m,
-            &mut r,
-        );
-        let ldx = LDX::new();
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let ldx = LDX::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 8));
         ldx.execute(args);
         assert_instruction(r.get_x(), -80, 3, WordAccess::new(0, 5), 4);
     }
@@ -307,13 +305,8 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 10),
-            &mut m,
-            &mut r,
-        );
-        let load = LDi::new();
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let load = LDi::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 10));
         load.execute(args);
 
         let ri = r.get_i(2);
@@ -332,13 +325,8 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8),
-            &mut m,
-            &mut r,
-        );
-        let load = LDAN::new();
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let load = LDAN::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8));
         load.execute(args);
         assert_instruction(r.get_a(), 80, 3, WordAccess::new(0, 5), 4);
     }
@@ -352,13 +340,8 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8),
-            &mut m,
-            &mut r,
-        );
-        let load = LDXN::new();
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let load = LDXN::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 8));
         load.execute(args);
         assert_instruction(r.get_x(), 80, 3, WordAccess::new(0, 5), 4);
     }
@@ -372,13 +355,8 @@ mod tests {
 
         let mut r = Registers::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 18),
-            &mut m,
-            &mut r,
-        );
-        let load = LDiN::new();
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let load = LDiN::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 18));
         load.execute(args);
 
         let ri = r.get_i(2);

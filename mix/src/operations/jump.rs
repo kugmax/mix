@@ -7,13 +7,15 @@ pub struct JMP {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JMP {
-    pub fn new() -> JMP {
+    pub fn new(instruction: Word) -> JMP {
         JMP {
             code: 39,
             execution_time: 1,
             f: 0,
+            instruction: instruction,
         }
     }
 }
@@ -21,8 +23,11 @@ impl Operation for JMP {
     fn execute(&self, args: OperationArgs) -> OperationResult {
         args.reg.set_j(ShortWord::new(args.addr + 1));
 
-        let next_addr = args.instruction.get_address() as u32;
+        let next_addr = self.instruction.get_address() as u32; //TODO: should be indexed??
         OperationResult::new(self.execution_time, next_addr)
+    }
+    fn get_name(&self) -> String {
+        String::from("JMP")
     }
 }
 
@@ -30,20 +35,25 @@ pub struct JSJ {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JSJ {
-    pub fn new() -> JSJ {
+    pub fn new(instruction: Word) -> JSJ {
         JSJ {
             code: 39,
             execution_time: 1,
             f: 1,
+            instruction: instruction,
         }
     }
 }
 impl Operation for JSJ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let next_addr = args.instruction.get_address() as u32;
+        let next_addr = self.instruction.get_address() as u32;
         OperationResult::new(self.execution_time, next_addr)
+    }
+    fn get_name(&self) -> String {
+        String::from("JSJ")
     }
 }
 
@@ -51,13 +61,15 @@ pub struct JOV {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JOV {
-    pub fn new() -> JOV {
+    pub fn new(instruction: Word) -> JOV {
         JOV {
             code: 39,
             execution_time: 1,
             f: 2,
+            instruction: instruction,
         }
     }
 }
@@ -67,11 +79,14 @@ impl Operation for JOV {
             args.reg.set_overflow(false);
 
             args.reg.set_j(ShortWord::new(args.addr + 1));
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JOV")
     }
 }
 
@@ -79,13 +94,15 @@ pub struct JNOV {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JNOV {
-    pub fn new() -> JNOV {
+    pub fn new(instruction: Word) -> JNOV {
         JNOV {
             code: 39,
             execution_time: 1,
             f: 3,
+            instruction: instruction,
         }
     }
 }
@@ -94,12 +111,15 @@ impl Operation for JNOV {
         return if !args.reg.is_overflow() {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             args.reg.set_overflow(false);
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JNOV")
     }
 }
 
@@ -107,13 +127,15 @@ pub struct JL {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JL {
-    pub fn new() -> JL {
+    pub fn new(instruction: Word) -> JL {
         JL {
             code: 39,
             execution_time: 1,
             f: 4,
+            instruction: instruction,
         }
     }
 }
@@ -122,11 +144,14 @@ impl Operation for JL {
         return if args.reg.get_comparison() == Comparison::LESS {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JL")
     }
 }
 
@@ -134,13 +159,15 @@ pub struct JE {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JE {
-    pub fn new() -> JE {
+    pub fn new(instruction: Word) -> JE {
         JE {
             code: 39,
             execution_time: 1,
             f: 5,
+            instruction: instruction,
         }
     }
 }
@@ -149,11 +176,14 @@ impl Operation for JE {
         return if args.reg.get_comparison() == Comparison::EQUAL {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JE")
     }
 }
 
@@ -161,13 +191,15 @@ pub struct JG {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JG {
-    pub fn new() -> JG {
+    pub fn new(instruction: Word) -> JG {
         JG {
             code: 39,
             execution_time: 1,
             f: 6,
+            instruction: instruction,
         }
     }
 }
@@ -176,11 +208,14 @@ impl Operation for JG {
         return if args.reg.get_comparison() == Comparison::GREATHER {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JG")
     }
 }
 
@@ -188,13 +223,15 @@ pub struct JGE {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JGE {
-    pub fn new() -> JGE {
+    pub fn new(instruction: Word) -> JGE {
         JGE {
             code: 39,
             execution_time: 1,
             f: 7,
+            instruction: instruction,
         }
     }
 }
@@ -205,11 +242,14 @@ impl Operation for JGE {
         {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JGE")
     }
 }
 
@@ -217,13 +257,15 @@ pub struct JNE {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JNE {
-    pub fn new() -> JNE {
+    pub fn new(instruction: Word) -> JNE {
         JNE {
             code: 39,
             execution_time: 1,
             f: 8,
+            instruction: instruction,
         }
     }
 }
@@ -234,11 +276,14 @@ impl Operation for JNE {
         {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JNE")
     }
 }
 
@@ -246,13 +291,15 @@ pub struct JLE {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JLE {
-    pub fn new() -> JLE {
+    pub fn new(instruction: Word) -> JLE {
         JLE {
             code: 39,
             execution_time: 1,
             f: 9,
+            instruction: instruction,
         }
     }
 }
@@ -263,11 +310,14 @@ impl Operation for JLE {
         {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JLE")
     }
 }
 
@@ -275,13 +325,15 @@ pub struct JAN {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JAN {
-    pub fn new() -> JAN {
+    pub fn new(instruction: Word) -> JAN {
         JAN {
             code: 40,
             execution_time: 1,
             f: 0,
+            instruction: instruction,
         }
     }
 }
@@ -290,11 +342,14 @@ impl Operation for JAN {
         return if args.reg.get_a().get_signed_value() < 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JAN")
     }
 }
 
@@ -302,13 +357,15 @@ pub struct JAZ {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JAZ {
-    pub fn new() -> JAZ {
+    pub fn new(instruction: Word) -> JAZ {
         JAZ {
             code: 40,
             execution_time: 1,
             f: 1,
+            instruction: instruction,
         }
     }
 }
@@ -317,11 +374,14 @@ impl Operation for JAZ {
         return if args.reg.get_a().get_signed_value() == 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JAZ")
     }
 }
 
@@ -329,13 +389,15 @@ pub struct JAP {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JAP {
-    pub fn new() -> JAP {
+    pub fn new(instruction: Word) -> JAP {
         JAP {
             code: 40,
             execution_time: 1,
             f: 2,
+            instruction: instruction,
         }
     }
 }
@@ -344,11 +406,14 @@ impl Operation for JAP {
         return if args.reg.get_a().get_signed_value() > 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JAP")
     }
 }
 
@@ -356,13 +421,15 @@ pub struct JANN {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JANN {
-    pub fn new() -> JANN {
+    pub fn new(instruction: Word) -> JANN {
         JANN {
             code: 40,
             execution_time: 1,
             f: 3,
+            instruction: instruction,
         }
     }
 }
@@ -371,11 +438,14 @@ impl Operation for JANN {
         return if args.reg.get_a().get_signed_value() >= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JANN")
     }
 }
 
@@ -383,13 +453,15 @@ pub struct JANZ {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JANZ {
-    pub fn new() -> JANZ {
+    pub fn new(instruction: Word) -> JANZ {
         JANZ {
             code: 40,
             execution_time: 1,
             f: 4,
+            instruction: instruction,
         }
     }
 }
@@ -398,11 +470,14 @@ impl Operation for JANZ {
         return if args.reg.get_a().get_signed_value() != 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JANZ")
     }
 }
 
@@ -410,13 +485,15 @@ pub struct JANP {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JANP {
-    pub fn new() -> JANP {
+    pub fn new(instruction: Word) -> JANP {
         JANP {
             code: 40,
             execution_time: 1,
             f: 5,
+            instruction: instruction,
         }
     }
 }
@@ -425,11 +502,14 @@ impl Operation for JANP {
         return if args.reg.get_a().get_signed_value() <= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JANP")
     }
 }
 
@@ -437,13 +517,15 @@ pub struct JXN {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JXN {
-    pub fn new() -> JXN {
+    pub fn new(instruction: Word) -> JXN {
         JXN {
             code: 47,
             execution_time: 1,
             f: 0,
+            instruction: instruction,
         }
     }
 }
@@ -452,11 +534,14 @@ impl Operation for JXN {
         return if args.reg.get_x().get_signed_value() < 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JXN")
     }
 }
 
@@ -464,13 +549,15 @@ pub struct JXZ {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JXZ {
-    pub fn new() -> JXZ {
+    pub fn new(instruction: Word) -> JXZ {
         JXZ {
             code: 47,
             execution_time: 1,
             f: 1,
+            instruction: instruction,
         }
     }
 }
@@ -479,11 +566,14 @@ impl Operation for JXZ {
         return if args.reg.get_x().get_signed_value() == 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JXZ")
     }
 }
 
@@ -491,13 +581,15 @@ pub struct JXP {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JXP {
-    pub fn new() -> JXP {
+    pub fn new(instruction: Word) -> JXP {
         JXP {
             code: 47,
             execution_time: 1,
             f: 2,
+            instruction: instruction,
         }
     }
 }
@@ -506,11 +598,14 @@ impl Operation for JXP {
         return if args.reg.get_x().get_signed_value() > 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JXP")
     }
 }
 
@@ -518,13 +613,15 @@ pub struct JXNN {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JXNN {
-    pub fn new() -> JXNN {
+    pub fn new(instruction: Word) -> JXNN {
         JXNN {
             code: 47,
             execution_time: 1,
             f: 3,
+            instruction: instruction,
         }
     }
 }
@@ -533,11 +630,14 @@ impl Operation for JXNN {
         return if args.reg.get_x().get_signed_value() >= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JXNN")
     }
 }
 
@@ -545,13 +645,15 @@ pub struct JXNZ {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JXNZ {
-    pub fn new() -> JXNZ {
+    pub fn new(instruction: Word) -> JXNZ {
         JXNZ {
             code: 47,
             execution_time: 1,
             f: 4,
+            instruction: instruction,
         }
     }
 }
@@ -560,11 +662,14 @@ impl Operation for JXNZ {
         return if args.reg.get_x().get_signed_value() != 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JXNZ")
     }
 }
 
@@ -572,13 +677,15 @@ pub struct JXNP {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JXNP {
-    pub fn new() -> JXNP {
+    pub fn new(instruction: Word) -> JXNP {
         JXNP {
             code: 47,
             execution_time: 1,
             f: 5,
+            instruction: instruction,
         }
     }
 }
@@ -587,11 +694,14 @@ impl Operation for JXNP {
         return if args.reg.get_x().get_signed_value() <= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JXNP")
     }
 }
 
@@ -599,27 +709,32 @@ pub struct JiN {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JiN {
-    pub fn new() -> JiN {
+    pub fn new(instruction: Word) -> JiN {
         JiN {
             code: 40,
             execution_time: 1,
             f: 0,
+            instruction: instruction,
         }
     }
 }
 impl Operation for JiN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() < 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JiN")
     }
 }
 
@@ -627,27 +742,32 @@ pub struct JiZ {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JiZ {
-    pub fn new() -> JiZ {
+    pub fn new(instruction: Word) -> JiZ {
         JiZ {
             code: 40,
             execution_time: 1,
             f: 1,
+            instruction: instruction,
         }
     }
 }
 impl Operation for JiZ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() == 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JiZ")
     }
 }
 
@@ -655,27 +775,32 @@ pub struct JiP {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JiP {
-    pub fn new() -> JiP {
+    pub fn new(instruction: Word) -> JiP {
         JiP {
             code: 40,
             execution_time: 1,
             f: 2,
+            instruction: instruction,
         }
     }
 }
 impl Operation for JiP {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() > 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JiP")
     }
 }
 
@@ -683,27 +808,32 @@ pub struct JiNN {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JiNN {
-    pub fn new() -> JiNN {
+    pub fn new(instruction: Word) -> JiNN {
         JiNN {
             code: 40,
             execution_time: 1,
             f: 3,
+            instruction: instruction,
         }
     }
 }
 impl Operation for JiNN {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() >= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JiNN")
     }
 }
 
@@ -711,27 +841,32 @@ pub struct JiNZ {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JiNZ {
-    pub fn new() -> JiNZ {
+    pub fn new(instruction: Word) -> JiNZ {
         JiNZ {
             code: 40,
             execution_time: 1,
             f: 4,
+            instruction: instruction,
         }
     }
 }
 impl Operation for JiNZ {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() != 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JiNZ")
     }
 }
 
@@ -739,27 +874,32 @@ pub struct JiNP {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl JiNP {
-    pub fn new() -> JiNP {
+    pub fn new(instruction: Word) -> JiNP {
         JiNP {
             code: 40,
             execution_time: 1,
             f: 5,
+            instruction: instruction,
         }
     }
 }
 impl Operation for JiNP {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
         return if args.reg.get_i(i).get_signed_value() <= 0 {
             args.reg.set_j(ShortWord::new(args.addr + 1));
 
-            let next_addr = args.instruction.get_address() as u32;
+            let next_addr = self.instruction.get_address() as u32;
             OperationResult::new(self.execution_time, next_addr)
         } else {
             OperationResult::from_args(self.execution_time, args)
         };
+    }
+    fn get_name(&self) -> String {
+        String::from("JiNP")
     }
 }
 
@@ -772,71 +912,41 @@ mod tests {
         let mut m = Memory::new();
         let mut r = Registers::new();
 
-        let operation = JMP::new();
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JMP::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
 
-        let operation = JSJ::new();
-        let args = OperationArgs::new(
-            3,
-            Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(3, &mut m, &mut r);
+        let operation = JSJ::new(Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(3_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
 
-        let operation = JOV::new();
-        let args = OperationArgs::new(
-            3,
-            Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(3, &mut m, &mut r);
+        let operation = JOV::new(Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(4, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
 
         r.set_overflow(true);
-        let operation = JOV::new();
-        let args = OperationArgs::new(
-            3,
-            Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(3, &mut m, &mut r);
+        let operation = JOV::new(Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(3_000, result.next_addr_instruction);
         assert_eq!(4, r.get_j().get());
 
         r.set_overflow(true);
-        let operation = JNOV::new();
-        let args = OperationArgs::new(
-            4,
-            Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(4, &mut m, &mut r);
+        let operation = JNOV::new(Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(5, result.next_addr_instruction);
         assert_eq!(4, r.get_j().get());
 
         r.set_overflow(false);
-        let operation = JNOV::new();
-        let args = OperationArgs::new(
-            4,
-            Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(4, &mut m, &mut r);
+        let operation = JNOV::new(Word::new_instruction(3_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(3_000, result.next_addr_instruction);
         assert_eq!(5, r.get_j().get());
@@ -847,24 +957,15 @@ mod tests {
         let mut m = Memory::new();
         let mut r = Registers::new();
 
-        let operation = JL::new();
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JL::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2, result.next_addr_instruction);
         assert_eq!(0, r.get_j().get());
 
         r.set_comparison(Comparison::LESS);
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JL::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
@@ -874,25 +975,16 @@ mod tests {
     fn je() {
         let mut m = Memory::new();
         let mut r = Registers::new();
-        let operation = JE::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JE::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2, result.next_addr_instruction);
         assert_eq!(0, r.get_j().get());
 
         r.set_comparison(Comparison::EQUAL);
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JE::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
@@ -902,25 +994,16 @@ mod tests {
     fn jg() {
         let mut m = Memory::new();
         let mut r = Registers::new();
-        let operation = JG::new();
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JG::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2, result.next_addr_instruction);
         assert_eq!(0, r.get_j().get());
 
         r.set_comparison(Comparison::GREATHER);
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JG::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
@@ -930,26 +1013,17 @@ mod tests {
     fn jge() {
         let mut m = Memory::new();
         let mut r = Registers::new();
-        let operation = JGE::new();
 
         r.set_comparison(Comparison::EQUAL);
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JGE::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
 
         r.set_comparison(Comparison::GREATHER);
-        let args = OperationArgs::new(
-            2,
-            Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(2, &mut m, &mut r);
+        let operation = JGE::new(Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_001, result.next_addr_instruction);
         assert_eq!(3, r.get_j().get());
@@ -959,26 +1033,17 @@ mod tests {
     fn jne() {
         let mut m = Memory::new();
         let mut r = Registers::new();
-        let operation = JNE::new();
 
         r.set_comparison(Comparison::LESS);
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JNE::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
 
         r.set_comparison(Comparison::GREATHER);
-        let args = OperationArgs::new(
-            2,
-            Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(2, &mut m, &mut r);
+        let operation = JNE::new(Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_001, result.next_addr_instruction);
         assert_eq!(3, r.get_j().get());
@@ -988,26 +1053,17 @@ mod tests {
     fn jle() {
         let mut m = Memory::new();
         let mut r = Registers::new();
-        let operation = JLE::new();
 
         r.set_comparison(Comparison::LESS);
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = JLE::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_000, result.next_addr_instruction);
         assert_eq!(2, r.get_j().get());
 
         r.set_comparison(Comparison::EQUAL);
-        let args = OperationArgs::new(
-            2,
-            Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(2, &mut m, &mut r);
+        let operation = JLE::new(Word::new_instruction(2_001, 1, WordAccess::new(0, 5), 56));
         let result = operation.execute(args);
         assert_eq!(2_001, result.next_addr_instruction);
         assert_eq!(3, r.get_j().get());

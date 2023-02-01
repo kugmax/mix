@@ -14,13 +14,15 @@ pub struct NUM {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl NUM {
-    pub fn new() -> NUM {
+    pub fn new(instruction: Word) -> NUM {
         NUM {
             code: 5,
             execution_time: 10,
             f: 0,
+            instruction: instruction,
         }
     }
 }
@@ -50,19 +52,24 @@ impl Operation for NUM {
 
         OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("NUM")
+    }
 }
 
 pub struct CHAR {
     code: u32,
     execution_time: u32,
     f: u32,
+    instruction: Word,
 }
 impl CHAR {
-    pub fn new() -> CHAR {
+    pub fn new(instruction: Word) -> CHAR {
         CHAR {
             code: 5,
             execution_time: 10,
             f: 1,
+            instruction: instruction,
         }
     }
 }
@@ -86,6 +93,9 @@ impl Operation for CHAR {
         args.reg.set_x(rx);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("CHAR")
     }
 }
 
@@ -111,7 +121,6 @@ mod tests {
 
     #[test]
     fn num() {
-        let op = NUM::new();
         let mut r = Registers::new();
         let mut m = Memory::new();
 
@@ -121,12 +130,8 @@ mod tests {
         r.set_a(ra);
         r.set_x(rx);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(0, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = NUM::new(Word::new_instruction(0, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
         assert_eq!(-12977700, r.get_a().get_signed_value());
 
@@ -136,12 +141,8 @@ mod tests {
         r.set_a(ra);
         r.set_x(rx);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(0, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = NUM::new(Word::new_instruction(0, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
 
         assert_eq!(3_199_999, r.get_a().get_signed_value());
@@ -149,7 +150,6 @@ mod tests {
 
     #[test]
     fn char() {
-        let op = CHAR::new();
         let mut r = Registers::new();
         let mut m = Memory::new();
 
@@ -159,12 +159,8 @@ mod tests {
         r.set_a(ra);
         r.set_x(rx);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(0, 0, WordAccess::new(0, 5), 0),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let op = CHAR::new(Word::new_instruction(0, 0, WordAccess::new(0, 5), 0));
         op.execute(args);
         assert_by_bytes(r.get_a(), -1, 30, 30, 31, 32, 39);
         assert_by_bytes(r.get_x(), 0, 37, 37, 36, 39, 39);

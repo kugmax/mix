@@ -33,73 +33,85 @@ fn compare(instruction: impl Instruction, r_type: RegisterType, mem: &Memory, re
 pub struct CMPA {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl CMPA {
-    pub fn new() -> CMPA {
+    pub fn new(instruction: Word) -> CMPA {
         CMPA {
             code: 56,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for CMPA {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        compare(args.instruction, RegisterType::A, args.mem, args.reg);
+        compare(self.instruction, RegisterType::A, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("CMPA")
     }
 }
 
 pub struct CMPX {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl CMPX {
-    pub fn new() -> CMPX {
+    pub fn new(instruction: Word) -> CMPX {
         CMPX {
             code: 63,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for CMPX {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        compare(args.instruction, RegisterType::X, args.mem, args.reg);
+        compare(self.instruction, RegisterType::X, args.mem, args.reg);
 
         OperationResult::from_args(self.execution_time, args)
+    }
+    fn get_name(&self) -> String {
+        String::from("CMPX")
     }
 }
 
 pub struct CMPi {
     code: u32,
     execution_time: u32,
+    instruction: Word,
 }
 
 impl CMPi {
-    pub fn new() -> CMPi {
+    pub fn new(instruction: Word) -> CMPi {
         CMPi {
             code: 56,
             execution_time: 2,
+            instruction: instruction,
         }
     }
 }
 
 impl Operation for CMPi {
     fn execute(&self, args: OperationArgs) -> OperationResult {
-        let f = args.instruction.get_f();
+        let f = self.instruction.get_f();
         if f.spec == 0 {
             args.reg.set_comparison(Comparison::EQUAL);
             return OperationResult::from_args(self.execution_time, args);
         }
 
-        let mem_cell = get_memory_cell(args.instruction, args.mem, args.reg);
+        let mem_cell = get_memory_cell(self.instruction, args.mem, args.reg);
         let mem_value = Word::new(mem_cell.get_by_access(f)).get_signed_value();
 
-        let i = (args.instruction.get_c() - self.code as u8) as usize;
+        let i = (self.instruction.get_c() - self.code as u8) as usize;
         let reg_cell = args.reg.get_i(i);
         let reg_value = ShortWord::new(reg_cell.get_by_access(f)).get_signed_value();
 
@@ -113,6 +125,9 @@ impl Operation for CMPi {
 
         OperationResult::from_args(self.execution_time, args)
     }
+    fn get_name(&self) -> String {
+        String::from("CMPi")
+    }
 }
 
 #[cfg(test)]
@@ -121,8 +136,6 @@ mod tests {
 
     #[test]
     fn cmpa() {
-        let operation = CMPA::new();
-
         let mut m = Memory::new();
         m.set(2_001, Word::new_from_signed(1).get());
         m.set(2_002, Word::new_from_signed(2).get());
@@ -136,65 +149,40 @@ mod tests {
         r.set_i(4, ShortWord::new(4));
 
         r.set_a(Word::new_from_signed(1));
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPA::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::EQUAL);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPA::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::LESS);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::GREATHER);
 
         r.set_a(Word::new_from_signed(-1));
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 3, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPA::new(Word::new_instruction(2_000, 3, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::EQUAL);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPA::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::LESS);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 4, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPA::new(Word::new_instruction(2_000, 4, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::GREATHER);
     }
 
     #[test]
     fn cmpx() {
-        let operation = CMPX::new();
         let mut m = Memory::new();
         m.set(2_001, Word::new_from_signed(1).get());
         m.set(2_002, Word::new_from_signed(2).get());
@@ -208,65 +196,40 @@ mod tests {
         r.set_i(4, ShortWord::new(4));
 
         r.set_x(Word::new_from_signed(1));
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPX::new(Word::new_instruction(2_000, 1, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::EQUAL);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPX::new(Word::new_instruction(2_000, 2, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::LESS);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::GREATHER);
 
         r.set_x(Word::new_from_signed(-1));
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 3, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPX::new(Word::new_instruction(2_000, 3, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::EQUAL);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPX::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::LESS);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 4, WordAccess::new(0, 5), 56),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPX::new(Word::new_instruction(2_000, 4, WordAccess::new(0, 5), 56));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::GREATHER);
     }
 
     #[test]
     fn cmpi() {
-        let operation = CMPi::new();
         let mut m = Memory::new();
         m.set(2_001, Word::new_from_signed(1).get());
         m.set(2_002, Word::new_from_signed(2).get());
@@ -279,66 +242,38 @@ mod tests {
         r.set_i(3, ShortWord::new_from_signed(-1));
         r.set_i(4, ShortWord::new_from_signed(-2));
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 57),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPi::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 57));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::EQUAL);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 58),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPi::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 58));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::GREATHER);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 59),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPi::new(Word::new_instruction(2_001, 0, WordAccess::new(0, 5), 59));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::LESS);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_004, 0, WordAccess::new(0, 5), 59),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPi::new(Word::new_instruction(2_004, 0, WordAccess::new(0, 5), 59));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::GREATHER);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 60),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPi::new(Word::new_instruction(2_003, 0, WordAccess::new(0, 5), 60));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::LESS);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_004, 0, WordAccess::new(0, 5), 60),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPi::new(Word::new_instruction(2_004, 0, WordAccess::new(0, 5), 60));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::EQUAL);
 
-        let args = OperationArgs::new(
-            1,
-            Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 57),
-            &mut m,
-            &mut r,
-        );
+        let args = OperationArgs::new(1, &mut m, &mut r);
+        let operation = CMPi::new(Word::new_instruction(2_000, 0, WordAccess::new(0, 0), 57));
         operation.execute(args);
         assert_eq!(r.get_comparison(), Comparison::EQUAL);
     }

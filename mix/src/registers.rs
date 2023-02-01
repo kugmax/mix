@@ -29,10 +29,21 @@ pub struct Registers {
 
 impl fmt::Debug for Registers {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ra:{} rx:{} r1:{} r2:{} r3:{} r4:{} r5:{} r6:{} rj:{} ov:{} cmp:{:?}",
-          self.a.get(), self.x.get(), 
-          self.j_i[0].get(), self.j_i[1].get(),self.j_i[2].get(),self.j_i[3].get(),self.j_i[4].get(),self.j_i[5].get(),self.j_i[6].get(),
-          self.is_overflow, self.comparison)
+        write!(
+            f,
+            "ra:{} rx:{} r1:{} r2:{} r3:{} r4:{} r5:{} r6:{} rj:{} ov:{} cmp:{:?}",
+            self.a.get_signed_value(),
+            self.x.get_signed_value(),
+            self.j_i[1].get_signed_value(),
+            self.j_i[2].get_signed_value(),
+            self.j_i[3].get_signed_value(),
+            self.j_i[4].get_signed_value(),
+            self.j_i[5].get_signed_value(),
+            self.j_i[6].get_signed_value(),
+            self.j_i[0].get_signed_value(),
+            self.is_overflow,
+            self.comparison
+        )
     }
 }
 
