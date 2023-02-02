@@ -91,13 +91,10 @@ impl MIX {
         let mut reader = BufReader::new(file);
         let mut result = Vec::new();
 
-        // let mut line = String::new();
-        // let len = reader.read_line(&mut line)?;
         let lines = reader.lines();
         for line in lines {
             let line = line.expect("some err in lines");
 
-            // let line = line::trim();
             let line = line.trim();
             if line.len() <= 0 {
                 continue;

@@ -1,10 +1,19 @@
+use std::env;
+use crate::mix::MIX;
+
 pub mod memory;
-pub mod operations;
-pub mod registers;
-pub mod processor;
 pub mod mix;
+pub mod operations;
+pub mod processor;
+pub mod registers;
 
 fn main() {
-  // let w = Word::new(1);
-  // println!("{:#?}", w);
+    let args: Vec<String> = env::args().collect();
+
+    let program_path = &args[1];
+
+    let mut mix = MIX::new();
+
+    mix.load(program_path);
+    mix.execute();
 }
