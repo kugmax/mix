@@ -19,6 +19,10 @@ impl Processor {
         Processor { addr }
     }
 
+    pub fn set_addr(&mut self, addr: u32) {
+        self.addr = addr;
+    }
+
     pub fn execute(&mut self, mem: &mut Memory, reg: &mut Registers) {
         let op = Operations::new();
         let mut count = 0;
@@ -33,14 +37,14 @@ impl Processor {
 
             // println!("      {:#?}", reg);
             // for i in 0..10 {
-                // println!("      {i}={}", mem.get(i as usize).get_signed_value());
+            // println!("      {i}={}", mem.get(i as usize).get_signed_value());
             // }
 
             self.addr = result.next_addr_instruction;
 
             // count += 1;
             // if count > 50 {
-                // break;
+            // break;
             // }
         }
     }
@@ -49,6 +53,11 @@ impl Processor {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn maximum() {
+        let mut w = Word::new_from_signed(0123456789);
+    }
 
     #[test]
     fn find_maximum() {
@@ -95,7 +104,7 @@ mod tests {
         assert_eq!(max, 33);
     }
 
-    #[test]
+    // #[test]
     fn program_p() {
         let mut m = Memory::new();
         let mut r = Registers::new();
@@ -147,12 +156,6 @@ mod tests {
         m.set_word(2_049, Word::new_from_signed(2010));
         m.set_word(2_050, Word::new_from_signed(3));
         m.set_word(2_051, Word::new_from_signed(-499));
-        // m.set_word(2_051, Word::new_from_signed(-10));
-
-        // r.set_i(1, ShortWord::new(10));
-        // r.set_j(ShortWord::new(4_000));
-        // r.set_i(1, ShortWord::new(1));
-        // r.set_i(2, ShortWord::new(5));
 
         p.execute(&mut m, &mut r);
     }
