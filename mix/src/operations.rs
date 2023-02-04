@@ -27,9 +27,9 @@ pub mod miscellaneous;
 pub mod store;
 
 // pub struct OperationDescription {
-    // code: u32,
-    // execution_time: u32,
-    // f: u8,
+// code: u32,
+// execution_time: u32,
+// f: u8,
 // }
 
 trait Operation {
@@ -97,13 +97,13 @@ impl Operations {
         let op = self.get_operation(instruction);
 
         // println!(
-            // "{}| {}: {} {} {} {}",
-            // addr,
-            // op.get_name(),
-            // instruction.get_address(),
-            // instruction.get_i(),
-            // instruction.get_byte(4),
-            // instruction.get_c()
+        // "{}| {}: {} {} {} {}",
+        // addr,
+        // op.get_name(),
+        // instruction.get_address(),
+        // instruction.get_i(),
+        // instruction.get_byte(4),
+        // instruction.get_c()
         // );
 
         let args = OperationArgs::new(addr, mem, reg);
@@ -195,10 +195,10 @@ impl Operations {
             48 if f == 2 => Box::new(ENTA::new(instruction)),
             48 if f == 3 => Box::new(ENNA::new(instruction)),
 
-            47..=54 if f == 0 => Box::new(INCi::new(instruction)),
-            47..=54 if f == 1 => Box::new(DECi::new(instruction)),
-            47..=54 if f == 2 => Box::new(ENTi::new(instruction)),
-            47..=54 if f == 3 => Box::new(ENNi::new(instruction)),
+            49..=54 if f == 0 => Box::new(INCi::new(instruction)),
+            49..=54 if f == 1 => Box::new(DECi::new(instruction)),
+            49..=54 if f == 2 => Box::new(ENTi::new(instruction)),
+            49..=54 if f == 3 => Box::new(ENNi::new(instruction)),
 
             55 if f == 0 => Box::new(INCX::new(instruction)),
             55 if f == 1 => Box::new(DECX::new(instruction)),
