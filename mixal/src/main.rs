@@ -1,16 +1,10 @@
 use crate::tags::*;
-use crate:: pseudo_op::*;
+use crate::pseudo_op::*;
+use crate::parser::*;
 
+mod parser;
 mod tags;
 mod pseudo_op;
-
-
-// fn equ(val: String) {}
-// fn orig(val: String) {}
-// fn con(val: &str) {}
-// fn alf(val: &str) {}
-// fn end(val: &str) {}
-
 
 // tag
 // token

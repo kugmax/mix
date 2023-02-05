@@ -41,8 +41,8 @@ START IOC 0(PRINTER) Skip to new page
  CON 2
  ORIG BUF0-5
 TITLE ALF FIRST
- ALF  FIVE
- ALF  HUND
+ ALF  FIVE Alphabetic information for
+ ALF  HUND  title line
  ALF RED P
  ALF RIMES
  ORIG BUF0+24

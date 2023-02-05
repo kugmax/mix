@@ -1,3 +1,4 @@
+use crate::parser::Printable;
 use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -18,9 +19,12 @@ impl Instruction {
         self.i = i;
     }
     // pub fn set_f(&mut self, f: u8) {
-        // self.f = f;
+    // self.f = f;
     // }
-    pub fn print(&self) -> String {
+}
+
+impl Printable for Instruction {
+    fn print(&self) -> String {
         self.aa.to_string()
             + ","
             + &self.i.to_string()
@@ -189,6 +193,10 @@ impl<'a> Tags<'a> {
         let inst = self.instructions.get(name).expect("not found"); //TODO: if not found then it could be pseudo-operations
         *inst
     }
+
+    pub fn is_instruction(&self, name: &str) -> bool {
+        self.instructions.contains_key(name)
+    }
 }
 
 #[cfg(test)]
@@ -201,6 +209,6 @@ mod tests {
         let mut op = t.get("CMPA");
         op.set_aa(-3000);
         op.set_i(3);
-        assert_eq!("-3000,3,5,56",op.print());
+        assert_eq!("-3000,3,5,56", op.print());
     }
 }
