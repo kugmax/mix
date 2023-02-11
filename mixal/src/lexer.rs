@@ -197,10 +197,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse() {
+    fn lexer_print_500_primes_mixal() {
         let mix_inst = MixInstructions::new();
         let lexer = Lexer::new();
         let sourse = read_programm("./programs/print_500_primes.mixal");
+        lexer.parse_program_lines(&mix_inst, sourse);
+    }
+
+    #[test]
+    fn lexer_mystery_program_mixal() {
+        let mix_inst = MixInstructions::new();
+        let lexer = Lexer::new();
+        let sourse = read_programm("./programs/mystery_program.mixal");
         lexer.parse_program_lines(&mix_inst, sourse);
     }
 }
