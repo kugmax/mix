@@ -1,10 +1,11 @@
-use crate::tags::*;
-use crate::pseudo_op::*;
 use crate::parser::*;
+use crate::pseudo_op::*;
+use crate::tags::*;
 
+mod lexer;
 mod parser;
-mod tags;
 mod pseudo_op;
+mod tags;
 
 // tag
 // token
@@ -28,7 +29,7 @@ mod pseudo_op;
 //
 //  arithmetic is goin left to right -1+5*20/6 -> 4*20/6 -> 80/6
 fn main() {
-    let tags = Tags::new();
+    let tags = MixInstructions::new();
     let mut inst = tags.get("LDA");
 
     println!("{:#?}", inst);

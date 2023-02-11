@@ -1,8 +1,8 @@
-use crate::parser::split_whitespace_once;
+use crate::lexer::split_whitespace_once;
 use crate::parser::Printable;
 use std::collections::HashMap;
 
-pub fn new_if_presudo_of(op: &str, line: &str) -> Option<Box<dyn PseudoOp>> {
+pub fn new_if_presudo_of(op: &str, line: &str) -> Option<Box<dyn MixalOp>> {
     return match op {
         "EQU" => Some(Box::new(EQU::new(line.to_string()))),
         "ORIG" => Some(Box::new(ORIG::new(line.to_string()))),
@@ -13,8 +13,9 @@ pub fn new_if_presudo_of(op: &str, line: &str) -> Option<Box<dyn PseudoOp>> {
     };
 }
 
-pub trait PseudoOp {
+pub trait MixalOp {
     fn parse_address(&self) -> String;
+    fn get_name(&self) -> String;
 }
 
 pub struct EQU {
@@ -25,10 +26,13 @@ impl EQU {
         EQU { value }
     }
 }
-impl PseudoOp for EQU {
+impl MixalOp for EQU {
     fn parse_address(&self) -> String {
         let (op, _) = split_whitespace_once(&self.value[..]);
         op.to_string()
+    }
+    fn get_name(&self) -> String {
+        "EQU".to_string()
     }
 }
 
@@ -40,10 +44,13 @@ impl ORIG {
         ORIG { value }
     }
 }
-impl PseudoOp for ORIG {
+impl MixalOp for ORIG {
     fn parse_address(&self) -> String {
         let (op, _) = split_whitespace_once(&self.value[..]);
         op.to_string()
+    }
+    fn get_name(&self) -> String {
+        "ORIG".to_string()
     }
 }
 
@@ -55,10 +62,13 @@ impl CON {
         CON { value }
     }
 }
-impl PseudoOp for CON {
+impl MixalOp for CON {
     fn parse_address(&self) -> String {
         let (op, _) = split_whitespace_once(&self.value[..]);
         op.to_string()
+    }
+    fn get_name(&self) -> String {
+        "CON".to_string()
     }
 }
 
@@ -70,9 +80,12 @@ impl ALF {
         ALF { value }
     }
 }
-impl PseudoOp for ALF {
+impl MixalOp for ALF {
     fn parse_address(&self) -> String {
         self.value[0..5].to_string()
+    }
+    fn get_name(&self) -> String {
+        "ALF".to_string()
     }
 }
 
@@ -84,9 +97,12 @@ impl END {
         END { value }
     }
 }
-impl PseudoOp for END {
+impl MixalOp for END {
     fn parse_address(&self) -> String {
         let (op, _) = split_whitespace_once(&self.value[..]);
         op.to_string()
+    }
+    fn get_name(&self) -> String {
+        "END".to_string()
     }
 }
