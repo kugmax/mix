@@ -3,22 +3,23 @@ use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Tag {
-  // SPACE,
-  MINUS,
-  PLUS,
-  MULTIPLY,
-  DEVIDE,
-  MOD,
-  COMMA,
-  EQUAL,
-  OPEN_BR,
-  CLOSE_BR,
+    BLANK,
+    MINUS,
+    PLUS,
+    MULTIPLY,
+    DEVIDE,
+    MOD,
+    F_OP,
+    COMMA,
+    EQUAL,
+    OPEN_BR,
+    CLOSE_BR,
 
-  NUMBER,
-  SYMBOLS,
-  
-  MIX_OP,
-  MIXAL_OP,
+    NUMBER,
+    SYMBOLS,
+
+    MIX_OP,
+    MIXAL_OP,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -218,7 +219,7 @@ impl<'a> MixInstructions<'a> {
     }
 
     pub fn get(&self, name: &str) -> MixInstruction {
-        let inst = self.instructions.get(name).expect("not found"); //TODO: if not found then it could be pseudo-operations
+        let inst = self.instructions.get(name).expect("mix instuction not found");
         *inst
     }
 

@@ -32,8 +32,14 @@ impl Token {
         }
     }
     pub fn new_symbols(value: String) -> Token {
+        let tag = if value.is_empty() {
+            Tag::BLANK
+        } else {
+            Tag::SYMBOLS
+        };
+
         Token {
-            tag: Tag::SYMBOLS,
+            tag: tag,
             num_value: None,
             symbols_value: Some(value),
         }

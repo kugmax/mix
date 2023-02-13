@@ -14,9 +14,9 @@ use std::io::BufReader;
 pub mod token;
 
 pub struct ProgramLine<'a> {
-    loc: Token,
-    op: OpToken<'a>,
-    addr: Vec<Token>,
+    pub loc: Token,
+    pub op: OpToken<'a>,
+    pub addr: Vec<Token>,
 }
 impl<'a> ProgramLine<'a> {
     pub fn new(loc: Token, op: OpToken<'a>, addr: Vec<Token>) -> ProgramLine<'a> {
@@ -101,6 +101,9 @@ impl Lexer {
                     '*' => {
                         result.push(Token::new(Tag::MULTIPLY, c.to_string()));
                     }
+                    ':' => {
+                        result.push(Token::new(Tag::F_OP, c.to_string()));
+                    }
                     ',' => {
                         result.push(Token::new(Tag::COMMA, c.to_string()));
                     }
@@ -117,10 +120,10 @@ impl Lexer {
                         ch = chars.next();
                         if ch == Some('/') {
                             result.push(Token::new(Tag::MOD, "//".to_string()));
-                            continue;
                         } else {
                             result.push(Token::new(Tag::DEVIDE, c.to_string()));
                         }
+                        continue;
                     }
                     _ => {
                         let mut c = c;
@@ -140,9 +143,8 @@ impl Lexer {
                             ch = chars.next();
                             if ch == None {
                                 break;
-                            } else {
-                                c = ch.expect("error");
                             }
+                            c = ch.expect("error");
                         }
                         if !symbols.is_empty() {
                             if is_number {
