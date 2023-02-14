@@ -115,17 +115,50 @@ impl<'a> AddrParser<'a> {
         0
     }
 
-    fn lookahead(&mut self) -> Option<Token> {
+    fn current(&mut self) -> Option<Token> {
         let result = match self.tokens.get(self.current) {
             None => None,
             Some(t) => Some(t.clone()),
         };
         result
     }
-    fn next(&mut self) -> Option<Token> {
-        let result = self.lookahead();
+    fn step(&mut self) {
         self.current += 1;
-        result
+    }
+
+    //W_value
+
+    //TODO: literal_constant,
+    fn aif(&mut self) -> (Option<i32>, Option<i32>, Option<i32>) {
+        println!("before");
+        let a_part = self.exprs(None);
+        println!("a_part {:#?}", a_part);
+
+        let i_part = match self.current() {
+            None => return (a_part, None, None),
+            Some(t) => match t.get_tag() {
+                Tag::COMMA => {
+                    self.step();
+                    self.exprs(None)
+                }
+                _ => None,
+            },
+        };
+
+        println!("i_part {:#?}", i_part);
+        let f_part = match self.current() {
+            None => None,
+            Some(t) => match t.get_tag() {
+                Tag::OPEN_BR => {
+                    self.step();
+                    self.exprs(None)
+                }
+                _ => None,
+            },
+        };
+
+        println!("f_part {:#?}", f_part);
+        (a_part, i_part, f_part)
     }
 
     fn exprs(&mut self, acc: Option<i32>) -> Option<i32> {
@@ -133,36 +166,61 @@ impl<'a> AddrParser<'a> {
             None => self.expr().reduce(),
             Some(x) => acc,
         };
+        println!("exprs left {:#?}", left);
+        println!("exprs current {:#?}", self.current());
 
-        let op = match self.next() {
+        let op = match self.current() {
             None => return left,
-            Some(t) => t.get_tag(),
+            Some(t) => match t.get_tag() {
+                Tag::COMMA => return left,
+                Tag::EQUAL => return left, //TODO: this should be parsed as symbols
+                Tag::OPEN_BR => return left,
+                Tag::CLOSE_BR => return left,
+                Tag::NUMBER => return left,
+                Tag::SYMBOLS => return left,
+                _ => t.get_tag(),
+            },
         };
+        self.step();
+        println!("exprs op {:#?}", op);
 
-        let right: Box<dyn Expr> = match self.next() {
+        let right: Box<dyn Expr> = match self.current() {
             None => panic!("syntax error"),
             Some(t) => Box::new(self.unary(t.clone())),
         };
+        self.step();
 
         let result = BinaryOp::new(op, Box::new(Holder::new(left)), right).reduce();
         self.exprs(result)
     }
 
     fn expr(&mut self) -> Box<dyn Expr> {
-        let left: Box<dyn Expr> = match self.next() {
+        let left: Box<dyn Expr> = match self.current() {
             None => return Box::new(EmptyExpr::new()),
             Some(t) => Box::new(self.unary(t.clone())),
         };
+        self.step();
+        println!("expr left {:#?}", left.to_string());
+        println!("expr current {:#?}", self.current());
 
-        let op = match self.next() {
+        let op = match self.current() {
             None => return left,
-            Some(t) => t.get_tag(),
+            Some(t) => match t.get_tag() {
+                Tag::COMMA => return left,
+                Tag::EQUAL => return left, //TODO: this should be parsed as symbols
+                Tag::OPEN_BR => return left,
+                Tag::CLOSE_BR => return left,
+                _ => t.get_tag(),
+            },
         };
+        self.step();
+        println!("expr op {:#?}", op);
 
-        let right: Box<dyn Expr> = match self.next() {
+        let right: Box<dyn Expr> = match self.current() {
             None => panic!("syntax error"),
             Some(t) => Box::new(self.unary(t.clone())),
         };
+        self.step();
 
         Box::new(BinaryOp::new(op, left, right))
     }
@@ -170,11 +228,13 @@ impl<'a> AddrParser<'a> {
     fn unary(&mut self, token: Token) -> UnaryOp {
         return match token.get_tag() {
             Tag::MINUS => {
-                let next_t = self.next().expect("syntax error");
+                self.step();
+                let next_t = self.current().expect("syntax error");
                 UnaryOp::new(Tag::MINUS, Box::new(self.atom_expr(next_t)))
             }
             Tag::PLUS => {
-                let next_t = self.next().expect("syntax error");
+                self.step();
+                let next_t = self.current().expect("syntax error");
                 UnaryOp::new(Tag::PLUS, Box::new(self.atom_expr(next_t)))
             }
             _ => UnaryOp::new(Tag::PLUS, Box::new(self.atom_expr(token))),
@@ -186,8 +246,8 @@ impl<'a> AddrParser<'a> {
             Tag::NUMBER => Number::new(token.clone()),
             Tag::SYMBOLS => Number::new(Token::new_number(self.symbols.get(&token.get_symbols()))),
             Tag::MULTIPLY => Number::new(Token::new_number(self.line_num as i32)),
-            _ => {
-                panic!("syntax error");
+            tag => {
+                panic!("atom_expr syntax error {:#?}", tag);
             }
         };
     }
@@ -376,15 +436,110 @@ mod tests {
             Token::new_number(1),
             Token::new(Tag::PLUS, "+".to_string()),
             Token::new_number(5),
-
             Token::new(Tag::MULTIPLY, "*".to_string()),
             Token::new_number(20),
-
             Token::new(Tag::DEVIDE, "/".to_string()),
             Token::new_number(6),
         ];
         let mut parser = AddrParser::new(&table, 0, &tokens);
         let result = parser.exprs(None);
         assert_eq!(Some(13), result);
+
+        let tokens = vec![
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+        ];
+        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let result = parser.exprs(None);
+        assert_eq!(Some(4), result);
+
+        let tokens = vec![
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(3),
+        ];
+        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let result = parser.exprs(None);
+        assert_eq!(Some(-1), result);
+
+        let tokens = vec![
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(3),
+        ];
+        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let result = parser.exprs(None);
+        assert_eq!(Some(5), result);
+    }
+
+    #[test]
+    fn aif() {
+        let table = SymbolTable::new();
+
+        let tokens = vec![
+            Token::new_number(5),
+            Token::new(Tag::COMMA, ",".to_string()),
+            Token::new_number(2),
+            Token::new(Tag::OPEN_BR, "(".to_string()),
+            Token::new_number(0),
+            Token::new(Tag::CLOSE_BR, ")".to_string()),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let (a, i, f) = parser.aif();
+        assert_eq!(Some(5), a);
+        assert_eq!(Some(2), i);
+        assert_eq!(Some(0), f);
+
+        let tokens = vec![
+            Token::new_number(5),
+            Token::new(Tag::COMMA, ",".to_string()),
+            Token::new_number(2),
+            Token::new(Tag::OPEN_BR, "(".to_string()),
+            Token::new_number(1),
+            Token::new(Tag::F_OP, ":".to_string()),
+            Token::new_number(5),
+            Token::new(Tag::CLOSE_BR, ")".to_string()),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let (a, i, f) = parser.aif();
+        assert_eq!(Some(5), a);
+        assert_eq!(Some(2), i);
+        assert_eq!(Some(13), f);
+
+        let tokens = vec![Token::new_number(5)];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let (a, i, f) = parser.aif();
+        assert_eq!(Some(5), a);
+        assert_eq!(None, i);
+        assert_eq!(None, f);
+
+        let tokens = vec![
+            Token::new_number(5),
+            Token::new(Tag::COMMA, ",".to_string()),
+            Token::new_number(2),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let (a, i, f) = parser.aif();
+        assert_eq!(Some(5), a);
+        assert_eq!(Some(2), i);
+        assert_eq!(None, f);
+
+        let tokens = vec![
+            Token::new_number(5),
+            Token::new(Tag::PLUS, "+".to_string()),
+            Token::new_number(5),
+            Token::new(Tag::COMMA, ",".to_string()),
+            Token::new_number(2),
+            Token::new(Tag::OPEN_BR, "(".to_string()),
+            Token::new_number(0),
+            Token::new(Tag::CLOSE_BR, ")".to_string()),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let (a, i, f) = parser.aif();
+        assert_eq!(Some(10), a);
+        assert_eq!(Some(2), i);
+        assert_eq!(Some(0), f);
     }
 }

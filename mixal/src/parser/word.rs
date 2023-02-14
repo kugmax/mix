@@ -3,6 +3,7 @@ use crate::tags::*;
 
 pub trait Expr {
     fn reduce(&self) -> Option<i32>;
+    fn to_string(&self) -> String;
 }
 
 pub struct EmptyExpr {}
@@ -15,7 +16,11 @@ impl Expr for EmptyExpr {
     fn reduce(&self) -> Option<i32> {
         None
     }
+    fn to_string(&self) -> String {
+        "empty_expr".to_string()
+    }
 }
+
 pub struct Holder {
     val: Option<i32>,
 }
@@ -27,6 +32,9 @@ impl Holder {
 impl Expr for Holder {
     fn reduce(&self) -> Option<i32> {
         self.val
+    }
+    fn to_string(&self) -> String {
+        format!("holder {:#?}", self.val)
     }
 }
 
@@ -41,6 +49,9 @@ impl Number {
 impl Expr for Number {
     fn reduce(&self) -> Option<i32> {
         Some(self.token.get_number())
+    }
+    fn to_string(&self) -> String {
+        format!("number {:#?}", self.token.get_number())
     }
 }
 
@@ -77,6 +88,9 @@ impl Expr for BinaryOp {
         let result: i32 = op(l, r);
         Some(result)
     }
+    fn to_string(&self) -> String {
+        format!("binary_op {} {:#?} {}", self.left.to_string(), self.tag, self.right.to_string())
+    }
 }
 
 pub struct UnaryOp {
@@ -102,5 +116,8 @@ impl Expr for UnaryOp {
         };
 
         Some(op(self.right.reduce().expect("syntax error")))
+    }
+    fn to_string(&self) -> String {
+        format!("unary_op {:#?} {}",  self.tag, self.right.to_string())
     }
 }

@@ -89,7 +89,16 @@ impl Memory {
             .set(word.get());
     }
 
-    pub fn set_bytes(&mut self, mem_i: usize, sign: i8, byte_1: u8, byte_2: u8, byte_3: u8, byte_4: u8, byte_5: u8) {
+    pub fn set_bytes(
+        &mut self,
+        mem_i: usize,
+        sign: i8,
+        byte_1: u8,
+        byte_2: u8,
+        byte_3: u8,
+        byte_4: u8,
+        byte_5: u8,
+    ) {
         let mut word = Word::new(0);
         word.set_sign(sign);
         word.set_byte(1, byte_1);
