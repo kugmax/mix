@@ -219,7 +219,10 @@ impl<'a> MixInstructions<'a> {
     }
 
     pub fn get(&self, name: &str) -> MixInstruction {
-        let inst = self.instructions.get(name).expect("mix instuction not found");
+        let inst = self
+            .instructions
+            .get(name)
+            .expect("mix instuction not found");
         *inst
     }
 

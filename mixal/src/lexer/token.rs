@@ -59,6 +59,13 @@ impl Token {
             _ => panic!("token doesn't have num value"),
         };
     }
+    pub fn clone(&self) -> Token {
+        Token {
+            tag: self.tag,
+            num_value: self.num_value,
+            symbols_value: self.symbols_value.clone(),
+        }
+    }
 }
 impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

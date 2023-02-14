@@ -1,6 +1,7 @@
 use crate::lexer::token::*;
 use crate::lexer::*;
 use crate::tags::*;
+use crate::word::*;
 
 use std::collections::HashMap;
 use std::fmt;
@@ -71,10 +72,14 @@ impl SymbolTable {
             name_value: HashMap::new(),
         }
     }
-    pub fn get(&self, name: &str) -> &Vec<i32> {
-        self.name_lines
-            .get(name)
-            .expect(&format!("symbol not found {name}")[..])
+    pub fn get(&self, name: &str) -> i32 {
+        return match self.name_value.get(name) {
+            Some(x) => *x,
+            None => self
+                .name_lines
+                .get(name)
+                .expect(&format!("symbol not found {name}")[..])[0], //TODO: need implement for 2H 2B 2F
+        };
     }
 
     pub fn put(&mut self, name: &str, line: i32) {
@@ -85,6 +90,106 @@ impl SymbolTable {
 
         lines.push(line);
         self.name_lines.insert(name.to_string(), lines);
+    }
+}
+
+struct AddrParser<'a> {
+    symbols: &'a SymbolTable,
+    line_num: u32,
+
+    tokens: &'a Vec<Token>,
+    current: usize,
+}
+impl<'a> AddrParser<'a> {
+    pub fn new(symbols: &'a SymbolTable, line_num: u32, tokens: &'a Vec<Token>) -> AddrParser<'a> {
+        AddrParser {
+            symbols: symbols,
+            line_num: line_num,
+            tokens: tokens,
+            current: 0,
+        }
+    }
+
+    pub fn parse(&self) -> i32 {
+        //TODO: for ALF it would be something else
+        0
+    }
+
+    fn lookahead(&mut self) -> Option<Token> {
+        let result = match self.tokens.get(self.current) {
+            None => None,
+            Some(t) => Some(t.clone()),
+        };
+        result
+    }
+    fn next(&mut self) -> Option<Token> {
+        let result = self.lookahead();
+        self.current += 1;
+        result
+    }
+
+    fn exprs(&mut self, acc: Option<i32>) -> Option<i32> {
+        let left = match acc {
+            None => self.expr().reduce(),
+            Some(x) => acc,
+        };
+
+        let op = match self.next() {
+            None => return left,
+            Some(t) => t.get_tag(),
+        };
+
+        let right: Box<dyn Expr> = match self.next() {
+            None => panic!("syntax error"),
+            Some(t) => Box::new(self.unary(t.clone())),
+        };
+
+        let result = BinaryOp::new(op, Box::new(Holder::new(left)), right).reduce();
+        self.exprs(result)
+    }
+
+    fn expr(&mut self) -> Box<dyn Expr> {
+        let left: Box<dyn Expr> = match self.next() {
+            None => return Box::new(EmptyExpr::new()),
+            Some(t) => Box::new(self.unary(t.clone())),
+        };
+
+        let op = match self.next() {
+            None => return left,
+            Some(t) => t.get_tag(),
+        };
+
+        let right: Box<dyn Expr> = match self.next() {
+            None => panic!("syntax error"),
+            Some(t) => Box::new(self.unary(t.clone())),
+        };
+
+        Box::new(BinaryOp::new(op, left, right))
+    }
+
+    fn unary(&mut self, token: Token) -> UnaryOp {
+        return match token.get_tag() {
+            Tag::MINUS => {
+                let next_t = self.next().expect("syntax error");
+                UnaryOp::new(Tag::MINUS, Box::new(self.atom_expr(next_t)))
+            }
+            Tag::PLUS => {
+                let next_t = self.next().expect("syntax error");
+                UnaryOp::new(Tag::PLUS, Box::new(self.atom_expr(next_t)))
+            }
+            _ => UnaryOp::new(Tag::PLUS, Box::new(self.atom_expr(token))),
+        };
+    }
+
+    fn atom_expr(&self, token: Token) -> Number {
+        return match token.get_tag() {
+            Tag::NUMBER => Number::new(token.clone()),
+            Tag::SYMBOLS => Number::new(Token::new_number(self.symbols.get(&token.get_symbols()))),
+            Tag::MULTIPLY => Number::new(Token::new_number(self.line_num as i32)),
+            _ => {
+                panic!("syntax error");
+            }
+        };
     }
 }
 
@@ -134,54 +239,152 @@ impl<'a> Parser<'a> {
             i += 1;
         }
     }
+}
 
-    pub fn w_value(&self, tokens: Vec<Token>) {
-        let mut tokens = tokens.iter();
-        let token = tokens.next();
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        loop {
-            match token {
-                None => {
-                    break;
-                }
-                Some(t) => match t.get_tag() {
-                    Tag::NUMBER => {
+    #[test]
+    fn binary_op_simple() {
+        let table = SymbolTable::new();
 
-                    },
-                    _ => {
-                        panic!("syntax error");
-                    }
-                },
-            }
-        }
+        let tokens = vec![];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(None, result);
+
+        let tokens = vec![Token::new_number(5)];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(5), result);
+
+        let tokens = vec![Token::new(Tag::PLUS, "+".to_string()), Token::new_number(5)];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(5), result);
+
+        let tokens = vec![
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(5),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(-5), result);
+
+        let tokens = vec![Token::new(Tag::MULTIPLY, "*".to_string())];
+        let mut parser = AddrParser::new(&table, 1, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(1), result);
     }
 
-    pub fn f_part(&self, tokens: Vec<Token>) -> i32 {
-        0
+    #[test]
+    fn binary_op() {
+        let table = SymbolTable::new();
+
+        let tokens = vec![
+            Token::new_number(5),
+            Token::new(Tag::PLUS, "+".to_string()),
+            Token::new_number(6),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(11), result);
+
+        let tokens = vec![
+            Token::new_number(5),
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(6),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(-1), result);
+
+        let tokens = vec![
+            Token::new_number(1),
+            Token::new(Tag::F_OP, ":".to_string()),
+            Token::new_number(5),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(13), result);
+
+        let tokens = vec![
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+        ];
+        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(4), result);
     }
 
-    pub fn expr(&self, tokens: Vec<Token>) {
-        let mut tokens = tokens.iter();
-        let token = tokens.next();
+    #[test]
+    fn binary_op_symbols() {
+        let mut table = SymbolTable::new();
+        table.put("x1", 2);
+        table.put("x2", 4);
 
-        loop {
-            match token {
-                None => {
-                    break;
-                }
-                Some(t) => match t.get_tag() {
-                    Tag::NUMBER => {
-                      // or this is number or it part of expr
-                    },
-                    Tag::SYMBOLS => {
-                      // must be reduced to the number
-                    },
-                    _ => {
-                        panic!("syntax error");
-                    }
-                },
-            }
-        }
+        let tokens = vec![
+            Token::new_symbols("x1".to_string()),
+            Token::new(Tag::PLUS, "+".to_string()),
+            Token::new_symbols("x2".to_string()),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let e = parser.expr();
+        let result = e.reduce();
+        assert_eq!(Some(6), result);
+    }
 
+    #[test]
+    fn exprs() {
+        let table = SymbolTable::new();
+
+        let tokens = vec![
+            Token::new_number(5),
+            Token::new(Tag::PLUS, "+".to_string()),
+            Token::new_number(6),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let result = parser.exprs(None);
+        assert_eq!(Some(11), result);
+
+        let tokens = vec![
+            Token::new_number(1),
+            Token::new(Tag::PLUS, "+".to_string()),
+            Token::new_number(2),
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(3),
+            Token::new(Tag::PLUS, "+".to_string()),
+            Token::new_number(9),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let result = parser.exprs(None);
+        assert_eq!(Some(9), result);
+
+        let tokens = vec![
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(1),
+            Token::new(Tag::PLUS, "+".to_string()),
+            Token::new_number(5),
+
+            Token::new(Tag::MULTIPLY, "*".to_string()),
+            Token::new_number(20),
+
+            Token::new(Tag::DEVIDE, "/".to_string()),
+            Token::new_number(6),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let result = parser.exprs(None);
+        assert_eq!(Some(13), result);
     }
 }

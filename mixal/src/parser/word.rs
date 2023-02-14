@@ -1,8 +1,33 @@
-use crate::tags::*;
 use crate::lexer::token::*;
+use crate::tags::*;
 
 pub trait Expr {
-    fn reduce(&self) -> i32;
+    fn reduce(&self) -> Option<i32>;
+}
+
+pub struct EmptyExpr {}
+impl EmptyExpr {
+    pub fn new() -> EmptyExpr {
+        EmptyExpr {}
+    }
+}
+impl Expr for EmptyExpr {
+    fn reduce(&self) -> Option<i32> {
+        None
+    }
+}
+pub struct Holder {
+    val: Option<i32>,
+}
+impl Holder {
+    pub fn new(val: Option<i32>) -> Holder {
+        Holder { val }
+    }
+}
+impl Expr for Holder {
+    fn reduce(&self) -> Option<i32> {
+        self.val
+    }
 }
 
 pub struct Number {
@@ -14,11 +39,10 @@ impl Number {
     }
 }
 impl Expr for Number {
-    fn reduce(&self) -> i32 {
-        self.token.get_number()
+    fn reduce(&self) -> Option<i32> {
+        Some(self.token.get_number())
     }
 }
-
 
 pub struct BinaryOp {
     tag: Tag,
@@ -36,7 +60,7 @@ impl BinaryOp {
     }
 }
 impl Expr for BinaryOp {
-    fn reduce(&self) -> i32 {
+    fn reduce(&self) -> Option<i32> {
         let op = match self.tag {
             Tag::PLUS => |l, r| l + r,
             Tag::MINUS => |l, r| l - r,
@@ -48,7 +72,10 @@ impl Expr for BinaryOp {
             _ => panic!("unsupported binary operation {:#?}", self.tag),
         };
 
-        op(self.left.reduce(), self.right.reduce())
+        let l: i32 = self.left.reduce().expect("syntax error");
+        let r: i32 = self.right.reduce().expect("syntax error");
+        let result: i32 = op(l, r);
+        Some(result)
     }
 }
 
@@ -66,7 +93,7 @@ impl UnaryOp {
     }
 }
 impl Expr for UnaryOp {
-    fn reduce(&self) -> i32 {
+    fn reduce(&self) -> Option<i32> {
         let op = match self.tag {
             Tag::PLUS => |r| r,
             Tag::MINUS => |r| 0 - r,
@@ -74,6 +101,6 @@ impl Expr for UnaryOp {
             _ => panic!("unsupported unary operation {:#?}", self.tag),
         };
 
-        op(self.right.reduce())
+        Some(op(self.right.reduce().expect("syntax error")))
     }
 }
