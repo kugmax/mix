@@ -126,13 +126,47 @@ impl<'a> AddrParser<'a> {
         self.current += 1;
     }
 
-    //W_value
+    fn w_value(
+        &mut self,
+        mut acc: Vec<(Option<i32>, Option<i32>)>,
+    ) -> Vec<(Option<i32>, Option<i32>)> {
+        loop {
+            match self.current() {
+                None => break,
+                Some(t) => match t.get_tag() {
+                    Tag::COMMA | Tag::OPEN_BR => self.step(),
+                    tag => break,
+                },
+            };
+        }
+
+        let e = self.exprs(None);
+        let mut f_part = None;
+        if e != None {
+            f_part = self.f_part();
+        }
+
+        if (e == None && f_part == None) {
+            return acc;
+        }
+        acc.push((e, f_part));
+
+        return match self.current() {
+            None => acc,
+            Some(t) => match t.get_tag() {
+                Tag::COMMA | Tag::CLOSE_BR => {
+                    self.step();
+                    self.w_value(acc)
+                }
+                tag => panic!("w_value syntax error"),
+            },
+        };
+    }
 
     //TODO: literal_constant,
     fn aif(&mut self) -> (Option<i32>, Option<i32>, Option<i32>) {
-        println!("before");
         let a_part = self.exprs(None);
-        println!("a_part {:#?}", a_part);
+        // println!("a_part {:#?}", a_part);
 
         let i_part = match self.current() {
             None => return (a_part, None, None),
@@ -145,8 +179,15 @@ impl<'a> AddrParser<'a> {
             },
         };
 
-        println!("i_part {:#?}", i_part);
-        let f_part = match self.current() {
+        let f_part = self.f_part();
+        // println!("i_part {:#?}", i_part);
+
+        // println!("f_part {:#?}", f_part);
+        (a_part, i_part, f_part)
+    }
+
+    fn f_part(&mut self) -> Option<i32> {
+        return match self.current() {
             None => None,
             Some(t) => match t.get_tag() {
                 Tag::OPEN_BR => {
@@ -156,9 +197,6 @@ impl<'a> AddrParser<'a> {
                 _ => None,
             },
         };
-
-        println!("f_part {:#?}", f_part);
-        (a_part, i_part, f_part)
     }
 
     fn exprs(&mut self, acc: Option<i32>) -> Option<i32> {
@@ -166,8 +204,8 @@ impl<'a> AddrParser<'a> {
             None => self.expr().reduce(),
             Some(x) => acc,
         };
-        println!("exprs left {:#?}", left);
-        println!("exprs current {:#?}", self.current());
+        // println!("exprs left {:#?}", left);
+        // println!("exprs current {:#?}", self.current());
 
         let op = match self.current() {
             None => return left,
@@ -182,7 +220,7 @@ impl<'a> AddrParser<'a> {
             },
         };
         self.step();
-        println!("exprs op {:#?}", op);
+        // println!("exprs op {:#?}", op);
 
         let right: Box<dyn Expr> = match self.current() {
             None => panic!("syntax error"),
@@ -200,8 +238,8 @@ impl<'a> AddrParser<'a> {
             Some(t) => Box::new(self.unary(t.clone())),
         };
         self.step();
-        println!("expr left {:#?}", left.to_string());
-        println!("expr current {:#?}", self.current());
+        // println!("expr left {:#?}", left.to_string());
+        // println!("expr current {:#?}", self.current());
 
         let op = match self.current() {
             None => return left,
@@ -214,7 +252,7 @@ impl<'a> AddrParser<'a> {
             },
         };
         self.step();
-        println!("expr op {:#?}", op);
+        // println!("expr op {:#?}", op);
 
         let right: Box<dyn Expr> = match self.current() {
             None => panic!("syntax error"),
@@ -541,5 +579,68 @@ mod tests {
         assert_eq!(Some(10), a);
         assert_eq!(Some(2), i);
         assert_eq!(Some(0), f);
+    }
+
+    #[test]
+    fn w_value() {
+        let table = SymbolTable::new();
+
+        let tokens = vec![Token::new_number(1)];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let result = parser.w_value(Vec::new());
+
+        assert_eq!(1, result.len());
+        let (e1, f1) = result.get(0).expect("error");
+
+        assert_eq!(Some(1), *e1);
+        assert_eq!(None, *f1);
+
+        let tokens = vec![
+            Token::new_number(1),
+            Token::new(Tag::COMMA, ",".to_string()),
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(1000),
+            Token::new(Tag::OPEN_BR, "(".to_string()),
+            Token::new_number(0),
+            Token::new(Tag::F_OP, ":".to_string()),
+            Token::new_number(2),
+            Token::new(Tag::CLOSE_BR, ")".to_string()),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let result = parser.w_value(Vec::new());
+
+        assert_eq!(2, result.len());
+
+        let (e1, f1) = result.get(0).expect("error");
+        assert_eq!(Some(1), *e1);
+        assert_eq!(None, *f1);
+
+        let (e2, f2) = result.get(1).expect("error");
+        assert_eq!(Some(-1000), *e2);
+        assert_eq!(Some(2), *f2);
+
+        let tokens = vec![
+            Token::new(Tag::MINUS, "-".to_string()),
+            Token::new_number(1000),
+            Token::new(Tag::OPEN_BR, "(".to_string()),
+            Token::new_number(0),
+            Token::new(Tag::F_OP, ":".to_string()),
+            Token::new_number(2),
+            Token::new(Tag::CLOSE_BR, ")".to_string()),
+            Token::new(Tag::COMMA, ",".to_string()),
+            Token::new_number(1),
+        ];
+        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let result = parser.w_value(Vec::new());
+
+        assert_eq!(2, result.len());
+
+        let (e1, f1) = result.get(0).expect("error");
+        assert_eq!(Some(-1000), *e1);
+        assert_eq!(Some(2), *f1);
+
+        let (e2, f2) = result.get(1).expect("error");
+        assert_eq!(Some(1), *e2);
+        assert_eq!(None, *f2);
     }
 }
