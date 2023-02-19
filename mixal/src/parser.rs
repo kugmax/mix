@@ -1,6 +1,7 @@
 use crate::lexer::token::*;
 use crate::lexer::*;
 use crate::parser::addr_parser::*;
+use crate::parser::symbol_table::*;
 use crate::pseudo_op::*;
 use crate::tags::*;
 use crate::word::*;
@@ -15,6 +16,7 @@ use std::str::FromStr;
 
 pub mod addr_parser;
 pub mod word;
+pub mod symbol_table;
 
 /*
  * program      -> lines
@@ -123,65 +125,6 @@ pub trait Printable {
 // - table for local symbols 2H... name-address-program line numbers (*)
 // - for addr parser has to be simple api for all 3 tables (put,get)
 
-pub struct SymbolTable {
-    equ_values: HashMap<String, Word>,
-    references: HashMap<String, i32>,
-    local_symbols: HashMap<String, Vec<i32>>,
-
-}
-impl SymbolTable {
-    pub fn new() -> SymbolTable {
-        SymbolTable {
-            equ_values: HashMap::new(),
-            references: HashMap::new(), 
-            local_symbols: HashMap::new(), 
-        }
-    }
-    pub fn get(&self, name: String) -> i32 {
-        if self.is_local_symbol(&name) {
-            //TODO: literal constant
-        }
-
-        return match self.equ_values.get(&name) {
-            Some(v) => v.get_signed_value(),
-            None => match self.references.get(&name) {
-                Some(v) => *v,
-                None => panic!("symbol {} not found", name),
-            },
-        };
-    }
-
-    pub fn put_equ(&mut self, name: String, value: Word) {
-        self.equ_values.insert(name, value);
-    }
-
-    pub fn put_reference(&mut self, name: String, address: u32) {
-        if self.is_local_symbol(&name) {
-            self.put_local_symbol(name, address);
-            return;
-        }
-        self.references.insert(name, address as i32);
-    }
-    fn put_local_symbol(&mut, name: String, address: u32) {
-          let local_symbols_addrs = match self.local_symbols.get(name) {
-            None => Vec::new(),
-            Some(v) => v.to_vec()
-          }
-    }
-
-    fn is_local_symbol(&self, name: &String) -> bool {
-        if name.len() == 2 {
-            let mut chars = name.chars();
-            let digit = chars.next().expect("error");
-            let direction = chars.next().expect("error");
-
-            return digit.is_numeric()
-                && (direction == 'H' || direction == 'B' || direction == 'F');
-        }
-
-        return false;
-    }
-}
 
 pub struct Parser<'a> {
     symbols: SymbolTable,
@@ -232,7 +175,7 @@ impl<'a> Parser<'a> {
                     Some(t) => match t.get_tag() {
                         Tag::EQUAL => {
                             let mut add_parser =
-                                AddrParser::new(&self.symbols, line_num, &line.addr);
+                                AddrParser::new(&self.symbols, line_num, addr, &line.addr);
                             let con_word = w_value_to_word(add_parser.literal_constant());
                             let con_loc = format!("con{}", l_con_inx);
                             l_con_inx += 1;
@@ -270,7 +213,7 @@ impl<'a> Parser<'a> {
                 },
 
                 Tag::MIXAL_OP => {
-                    let mut add_parser = AddrParser::new(&self.symbols, line_num, &line.addr);
+                    let mut add_parser = AddrParser::new(&self.symbols, line_num, addr, &line.addr);
                     match &line.op.get_mixal_op().get_name()[..] {
                         "EQU" => {
                             let w_values = add_parser.w_value(Vec::new());

@@ -15,15 +15,17 @@ use std::str::FromStr;
 pub struct AddrParser<'a> {
     symbols: &'a SymbolTable,
     line_num: u32,
+    line_addr: u32,
 
     tokens: &'a Vec<Token>,
     current: usize,
 }
 impl<'a> AddrParser<'a> {
-    pub fn new(symbols: &'a SymbolTable, line_num: u32, tokens: &'a Vec<Token>) -> AddrParser<'a> {
+    pub fn new(symbols: &'a SymbolTable, line_num: u32, line_addr: u32, tokens: &'a Vec<Token>) -> AddrParser<'a> {
         AddrParser {
             symbols: symbols,
             line_num: line_num,
+            line_addr: line_addr,
             tokens: tokens,
             current: 0,
         }
@@ -208,7 +210,7 @@ impl<'a> AddrParser<'a> {
     fn atom_expr(&self, token: Token) -> Number {
         return match token.get_tag() {
             Tag::NUMBER => Number::new(token.clone()),
-            Tag::SYMBOLS => Number::new(Token::new_number(self.symbols.get(token.get_symbols()))),
+            Tag::SYMBOLS => Number::new(Token::new_number(self.symbols.get(token.get_symbols(), self.line_addr))),
             Tag::MULTIPLY => Number::new(Token::new_number(self.line_num as i32)),
             tag => {
                 panic!("atom_expr syntax error {:#?}", tag);
@@ -226,19 +228,19 @@ mod tests {
         let table = SymbolTable::new();
 
         let tokens = vec![];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(None, result);
 
         let tokens = vec![Token::new_number(5)];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(5), result);
 
         let tokens = vec![Token::new(Tag::PLUS, "+".to_string()), Token::new_number(5)];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(5), result);
@@ -247,13 +249,13 @@ mod tests {
             Token::new(Tag::MINUS, "-".to_string()),
             Token::new_number(5),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(-5), result);
 
         let tokens = vec![Token::new(Tag::MULTIPLY, "*".to_string())];
-        let mut parser = AddrParser::new(&table, 1, &tokens);
+        let mut parser = AddrParser::new(&table, 1, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(1), result);
@@ -268,7 +270,7 @@ mod tests {
             Token::new(Tag::PLUS, "+".to_string()),
             Token::new_number(6),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(11), result);
@@ -278,7 +280,7 @@ mod tests {
             Token::new(Tag::MINUS, "-".to_string()),
             Token::new_number(6),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(-1), result);
@@ -288,7 +290,7 @@ mod tests {
             Token::new(Tag::F_OP, ":".to_string()),
             Token::new_number(5),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(13), result);
@@ -298,7 +300,7 @@ mod tests {
             Token::new(Tag::MULTIPLY, "*".to_string()),
             Token::new(Tag::MULTIPLY, "*".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let mut parser = AddrParser::new(&table, 2, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(4), result);
@@ -315,7 +317,7 @@ mod tests {
             Token::new(Tag::PLUS, "+".to_string()),
             Token::new_symbols("x2".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let e = parser.expr();
         let result = e.reduce();
         assert_eq!(Some(6), result);
@@ -330,7 +332,7 @@ mod tests {
             Token::new(Tag::PLUS, "+".to_string()),
             Token::new_number(6),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.exprs(None);
         assert_eq!(Some(11), result);
 
@@ -343,7 +345,7 @@ mod tests {
             Token::new(Tag::PLUS, "+".to_string()),
             Token::new_number(9),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.exprs(None);
         assert_eq!(Some(9), result);
 
@@ -357,7 +359,7 @@ mod tests {
             Token::new(Tag::DEVIDE, "/".to_string()),
             Token::new_number(6),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.exprs(None);
         assert_eq!(Some(13), result);
 
@@ -366,7 +368,7 @@ mod tests {
             Token::new(Tag::MULTIPLY, "*".to_string()),
             Token::new(Tag::MULTIPLY, "*".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let mut parser = AddrParser::new(&table, 2, 0, &tokens);
         let result = parser.exprs(None);
         assert_eq!(Some(4), result);
 
@@ -375,7 +377,7 @@ mod tests {
             Token::new(Tag::MINUS, "-".to_string()),
             Token::new_number(3),
         ];
-        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let mut parser = AddrParser::new(&table, 2, 0, &tokens);
         let result = parser.exprs(None);
         assert_eq!(Some(-1), result);
 
@@ -385,7 +387,7 @@ mod tests {
             Token::new(Tag::MINUS, "-".to_string()),
             Token::new_number(3),
         ];
-        let mut parser = AddrParser::new(&table, 2, &tokens);
+        let mut parser = AddrParser::new(&table, 2, 0, &tokens);
         let result = parser.exprs(None);
         assert_eq!(Some(5), result);
     }
@@ -402,7 +404,7 @@ mod tests {
             Token::new_number(0),
             Token::new(Tag::CLOSE_BR, ")".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let (a, i, f) = parser.aif();
         assert_eq!(Some(5), a);
         assert_eq!(Some(2), i);
@@ -418,14 +420,14 @@ mod tests {
             Token::new_number(5),
             Token::new(Tag::CLOSE_BR, ")".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let (a, i, f) = parser.aif();
         assert_eq!(Some(5), a);
         assert_eq!(Some(2), i);
         assert_eq!(Some(13), f);
 
         let tokens = vec![Token::new_number(5)];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let (a, i, f) = parser.aif();
         assert_eq!(Some(5), a);
         assert_eq!(None, i);
@@ -436,7 +438,7 @@ mod tests {
             Token::new(Tag::COMMA, ",".to_string()),
             Token::new_number(2),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let (a, i, f) = parser.aif();
         assert_eq!(Some(5), a);
         assert_eq!(Some(2), i);
@@ -452,7 +454,7 @@ mod tests {
             Token::new_number(0),
             Token::new(Tag::CLOSE_BR, ")".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let (a, i, f) = parser.aif();
         assert_eq!(Some(10), a);
         assert_eq!(Some(2), i);
@@ -464,7 +466,7 @@ mod tests {
         let table = SymbolTable::new();
 
         let tokens = vec![Token::new_number(1)];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.w_value(Vec::new());
 
         assert_eq!(1, result.len());
@@ -484,7 +486,7 @@ mod tests {
             Token::new_number(2),
             Token::new(Tag::CLOSE_BR, ")".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.w_value(Vec::new());
 
         assert_eq!(2, result.len());
@@ -508,7 +510,7 @@ mod tests {
             Token::new(Tag::COMMA, ",".to_string()),
             Token::new_number(1),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.w_value(Vec::new());
 
         assert_eq!(2, result.len());
@@ -531,7 +533,7 @@ mod tests {
             Token::new_number(1),
             Token::new(Tag::EQUAL, "=".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.literal_constant();
 
         assert_eq!(1, result.len());
@@ -548,7 +550,7 @@ mod tests {
             Token::new_symbols("L".to_string()),
             Token::new(Tag::EQUAL, "=".to_string()),
         ];
-        let mut parser = AddrParser::new(&table, 0, &tokens);
+        let mut parser = AddrParser::new(&table, 0, 0, &tokens);
         let result = parser.literal_constant();
 
         assert_eq!(1, result.len());
