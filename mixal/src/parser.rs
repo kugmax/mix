@@ -123,28 +123,22 @@ pub trait Printable {
 // - table for local symbols 2H... name-address-program line numbers (*)
 // - for addr parser has to be simple api for all 3 tables (put,get)
 
-//
-// let mut symbols: HashMap<String, i32> = HashMap::new();
-// let mut equ_values: HashMap<String, i32> = HashMap::new();
 pub struct SymbolTable {
-    // name_lines: HashMap<String, Vec<u32>>,
-    // name_value: HashMap<String, Word>,
     equ_values: HashMap<String, Word>,
     references: HashMap<String, i32>,
-    // future reference:  //TODO any address reference
-    //    literal_constant: TODO: insert CON and use it as future reference
-    //    local_symbols: 2H, 2B, 2F
+    local_symbols: HashMap<String, Vec<i32>>,
+
 }
 impl SymbolTable {
     pub fn new() -> SymbolTable {
         SymbolTable {
             equ_values: HashMap::new(),
-            references: HashMap::new(), // name_lines: HashMap::new(),
-                                        // name_value: HashMap::new(),
+            references: HashMap::new(), 
+            local_symbols: HashMap::new(), 
         }
     }
     pub fn get(&self, name: String) -> i32 {
-        if self.is_literal_constant(&name) {
+        if self.is_local_symbol(&name) {
             //TODO: literal constant
         }
 
@@ -162,14 +156,20 @@ impl SymbolTable {
     }
 
     pub fn put_reference(&mut self, name: String, address: u32) {
-        if self.is_literal_constant(&name) {
-            //TODO: literal constant
+        if self.is_local_symbol(&name) {
+            self.put_local_symbol(name, address);
             return;
         }
         self.references.insert(name, address as i32);
     }
+    fn put_local_symbol(&mut, name: String, address: u32) {
+          let local_symbols_addrs = match self.local_symbols.get(name) {
+            None => Vec::new(),
+            Some(v) => v.to_vec()
+          }
+    }
 
-    fn is_literal_constant(&self, name: &String) -> bool {
+    fn is_local_symbol(&self, name: &String) -> bool {
         if name.len() == 2 {
             let mut chars = name.chars();
             let digit = chars.next().expect("error");
@@ -181,16 +181,6 @@ impl SymbolTable {
 
         return false;
     }
-
-    // pub fn put(&mut self, name: &str, line: u32, value: Option<Word>) {
-    // let mut lines = match self.name_lines.get(name) {
-    // Some(lines) => lines.to_vec(),
-    // None => Vec::new(),
-    // };
-    //
-    // lines.push(line);
-    // self.name_lines.insert(name.to_string(), lines);
-    // }
 }
 
 pub struct Parser<'a> {
@@ -206,10 +196,10 @@ impl<'a> Parser<'a> {
     }
     //1. Cycle 1
     //  - reduce w_value for mixal
-    //  - process all mixal operations
+    //  - process not printable mixal operations
     //  - for mix operations reduce line address (ORIG)
     //  - implement literal constant = = -> con1 CON ...
-    //  - remove all mixal operation, in cycle 2 there are only mix operations
+    //  - remove not printable  mixal operation, in cycle 2 there are only printable operations
     pub fn parse_not_printable(&mut self, mut lines: Vec<ProgramLine>) {
         let mut program_start_addr = 0;
         let mut mix_lines: Vec<ProgramLine> = Vec::new();
