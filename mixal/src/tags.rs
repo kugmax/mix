@@ -47,9 +47,9 @@ impl<'a> MixInstruction<'a> {
     pub fn set_i(&mut self, i: u8) {
         self.i = i;
     }
-    // pub fn set_f(&mut self, f: u8) {
-    // self.f = f;
-    // }
+    pub fn set_f(&mut self, f: u8) {
+        self.f = f;
+    }
 }
 
 impl<'a> Printable for MixInstruction<'a> {

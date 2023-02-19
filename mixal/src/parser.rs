@@ -15,8 +15,8 @@ use std::io::BufReader;
 use std::str::FromStr;
 
 pub mod addr_parser;
-pub mod word;
 pub mod symbol_table;
+pub mod word;
 
 /*
  * program      -> lines
@@ -66,76 +66,10 @@ pub trait Printable {
     fn print(&self) -> String;
 }
 
-// #[derive(Debug, Copy, Clone)]
-// pub struct CodeLine {
-// addr: u32,
-// word: Word,
-// }
-// impl CodeLine {
-// fn new(addr: u32, word: Word) -> CodeLine {
-// CodeLine {
-// addr: addr,
-// word: word,
-// }
-// }
-// }
-// pub struct CodeLines {
-// program_start: u32,
-// lines: HashMap<u32, Vec<CodeLine>>,
-// blocks: Vec<u32>,
-// }
-// impl CodeLines {
-// fn new() -> CodeLines {
-// CodeLines {
-// program_start: 0,
-// lines: HashMap::new(),
-// blocks: Vec::new(),
-// }
-// }
-// fn set_program_start(&mut self, program_start: u32) {
-// self.program_start = program_start;
-// }
-// fn start_new_block(&mut self, new_block_addr: u32) {
-// self.blocks.push(new_block_addr);
-// }
-// fn add_code_line(&mut self, word: Word) {
-// let last_block_addr: u32 = if self.blocks.len() == 0 {0} else {
-// *self.blocks.get(self.blocks.len()-1).expect("error")
-// }
-//
-// let code_lines = match self.lines.get(&last_block_addr) {
-// None => Vec::new(),
-// Some(v) => v.to_vec()
-// };
-//
-// let next_addr = last_block_addr + code_lines.len() as u32;
-// code_lines.push(CodeLine::new(next_addr, word));
-// self.lines.insert(last_block_addr, code_lines);
-// }
-// }
-// impl Printable for CodeLines {
-// fn print(&self) -> String {
-// "NOT IMPLEMENTED".to_string()
-// }
-// }
-
-//TODO: if loc exists and I know the address then fill the symbol table
-// - table for equ values name-value
-// - table for references name-address
-// - table for local symbols 2H... name-address-program line numbers (*)
-// - for addr parser has to be simple api for all 3 tables (put,get)
-
-
-pub struct Parser<'a> {
-    symbols: SymbolTable,
-    mix_instructions: MixInstructions<'a>,
-}
-impl<'a> Parser<'a> {
-    pub fn new() -> Parser<'a> {
-        Parser {
-            symbols: SymbolTable::new(),
-            mix_instructions: MixInstructions::new(),
-        }
+pub struct Parser {}
+impl Parser {
+    pub fn new() -> Parser {
+        Parser {}
     }
     //1. Cycle 1
     //  - reduce w_value for mixal
@@ -143,9 +77,14 @@ impl<'a> Parser<'a> {
     //  - for mix operations reduce line address (ORIG)
     //  - implement literal constant = = -> con1 CON ...
     //  - remove not printable  mixal operation, in cycle 2 there are only printable operations
-    pub fn parse_not_printable(&mut self, mut lines: Vec<ProgramLine>) {
+    pub fn parse_not_printable<'a>(
+        symbols: &mut SymbolTable,
+        lines: Vec<ProgramLine<'a>>
+        ) -> (u32, Vec<ProgramLine<'a>>, Vec<u32>) {
+        let mut lines = lines.to_vec();
+
         let mut program_start_addr = 0;
-        let mut mix_lines: Vec<ProgramLine> = Vec::new();
+        let mut mix_lines: Vec<ProgramLine<'a>> = Vec::new();
         let mut addresses: Vec<u32> = Vec::new();
 
         let mut l_con_inx = 1;
@@ -158,10 +97,10 @@ impl<'a> Parser<'a> {
                 break;
             }
 
-            let mut line = lines.get(i).expect("error");
+            let line = lines.get(i).expect("error");
 
             if !line.loc.get_symbols().is_empty() {
-                self.symbols.put_reference(line.loc.get_symbols(), addr);
+                symbols.put_reference(line.loc.get_symbols(), addr);
             }
 
             match line.op.get_tag() {
@@ -175,7 +114,7 @@ impl<'a> Parser<'a> {
                     Some(t) => match t.get_tag() {
                         Tag::EQUAL => {
                             let mut add_parser =
-                                AddrParser::new(&self.symbols, line_num, addr, &line.addr);
+                                AddrParser::new(symbols, line_num, addr, &line.addr);
                             let con_word = w_value_to_word(add_parser.literal_constant());
                             let con_loc = format!("con{}", l_con_inx);
                             l_con_inx += 1;
@@ -213,12 +152,11 @@ impl<'a> Parser<'a> {
                 },
 
                 Tag::MIXAL_OP => {
-                    let mut add_parser = AddrParser::new(&self.symbols, line_num, addr, &line.addr);
+                    let mut add_parser = AddrParser::new(symbols, line_num, addr, &line.addr);
                     match &line.op.get_mixal_op().get_name()[..] {
                         "EQU" => {
                             let w_values = add_parser.w_value(Vec::new());
-                            self.symbols
-                                .put_equ(line.loc.get_symbols(), w_value_to_word(w_values));
+                            symbols.put_equ(line.loc.get_symbols(), w_value_to_word(w_values));
                         }
                         "ORIG" => {
                             let w_values = add_parser.w_value(Vec::new());
@@ -245,19 +183,79 @@ impl<'a> Parser<'a> {
 
             i += 1;
         }
+        (program_start_addr, mix_lines, addresses)
     }
 
-    pub fn parse(&mut self, lines: Vec<ProgramLine>) {
-        //TODO:
-        //1. Cycle 1
-        //  - reduce w_value for mixal
-        //  - process all mixal operations
-        //  - for mix operations reduce line address (ORIG)
-        //  - implement literal constant = = -> con1 CON ...
-        //  - remove all mixal operation, in cycle 2 there are only mix operations
-        //2. Cycle 2 (here only mix, with line num, line addr)
-        //  - reduce mix operations
-        //  - implement local symbols 2H, 2B, 2F
+    pub fn parse_printable(
+        symbols: &mut SymbolTable,
+        program_start_addr: u32,
+        lines: Vec<ProgramLine>,
+        addresses: Vec<u32>,
+    ) -> Vec<String> {
+        if lines.len() != addresses.len() {
+            panic!("lines.len() != addresses.len()");
+        }
+
+        let mut program: Vec<String> = Vec::new();
+
+        let mut line_num: u32 = 0;
+        for line in lines {
+            let addr = addresses.get(line_num as usize).expect("error");
+            let mut printable_line = String::new();
+
+            let mut add_parser = AddrParser::new(symbols, line_num, *addr, &line.addr);
+
+            match line.op.get_tag() {
+                Tag::MIX_OP => {
+                    let (a_part, i_part, f_part) = add_parser.aif();
+                    let mut instruction = *line.op.get_mix_op();
+
+                    if a_part != None {
+                        instruction.set_aa(a_part.expect("error set_aa"));
+                    }
+                    if i_part != None {
+                        instruction.set_i(i_part.expect("error set_i") as u8);
+                    }
+                    if f_part != None {
+                        instruction.set_f(f_part.expect("error set_f") as u8);
+                    }
+                    printable_line = format!("{addr}, {}", instruction.print());
+                }
+                Tag::MIXAL_OP => match &line.op.get_mixal_op().get_name()[..] {
+                    "CON" => {
+                        let w_values = add_parser.w_value(Vec::new());
+                        let value_to_print = w_value_to_word(w_values).get_signed_value();
+
+                        printable_line = format!("{addr}, {value_to_print}");
+                    }
+                    "ALF" => {
+                        let bytes = line.op.get_mixal_op().alf_to_num();
+                        printable_line = format!(
+                            "{addr}, 0, {},{},{},{},{}",
+                            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4]
+                        );
+                    }
+                    mixal_op => {
+                        panic!("unexpected mixal op operation {:#?}", mixal_op);
+                    }
+                },
+                _ => {
+                    panic!("unsupported operation {:#?}", line.op.get_tag());
+                }
+            }
+            program.push(printable_line);
+
+            line_num += 1;
+        }
+        program.push(program_start_addr.to_string());
+        program
+    }
+
+    pub fn parse(&self, lines: Vec<ProgramLine>) -> Vec<String> {
+        let mut symbols = SymbolTable::new();
+        let (start, lines, addrs) = Parser::parse_not_printable(&mut symbols, lines);
+        let lines = Parser::parse_printable(&mut symbols, start, lines, addrs);
+        lines
     }
 }
 fn w_value_to_word(w_value: Vec<(Option<i32>, Option<i32>)>) -> Word {

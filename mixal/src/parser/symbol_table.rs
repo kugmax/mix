@@ -15,7 +15,7 @@ use std::str::FromStr;
 
 pub struct LocalSymbolTabel {
     local_symbols: HashMap<u8, Vec<u32>>,
-    // local_symbols: HashMap<u8, Vec<(u32, u32)>>,
+    // local_symbols: HashMap<u8, Vec<(u32, u32)>>, //TODO: need to jump over line num not addresses
 }
 impl LocalSymbolTabel {
     pub fn new() -> LocalSymbolTabel {
@@ -146,7 +146,7 @@ mod tests {
         assert_eq!(4, table.get("2B".to_string(), 7));
         assert_eq!(2, table.get("2B".to_string(), 3));
         assert_eq!(10, table.get("2B".to_string(), 200));
-        
+
         assert_eq!(20, table.get("3F".to_string(), 0));
         assert_eq!(30, table.get("3F".to_string(), 22));
         assert_eq!(2, table.get("2F".to_string(), 0));
