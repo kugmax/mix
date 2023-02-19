@@ -1,4 +1,4 @@
-use crate::new_if_presudo_of;
+use crate::new_if_presudo_op;
 use crate::tags::Tag;
 use crate::MixInstructions;
 
@@ -33,6 +33,15 @@ impl fmt::Debug for ProgramLine<'_> {
         write!(f, "{:#?} {:#?} {}", self.loc, self.op, addr_str)
     }
 }
+impl Clone for ProgramLine<'_> {
+    fn clone(&self) -> Self {
+        ProgramLine {
+            loc: self.loc.clone(),
+            op: self.op.clone(),
+            addr: self.addr.to_vec(),
+        }
+    }
+}
 
 pub struct Lexer {}
 impl Lexer {
@@ -59,12 +68,12 @@ impl Lexer {
             let mut op_token;
 
             let mut address = String::new();
-            let pseudo_op = new_if_presudo_of(op, line);
+            let pseudo_op = new_if_presudo_op(op, line);
             if pseudo_op.is_none() {
                 let (left, _) = split_whitespace_once(line);
                 address = left.to_string();
                 let mix_op = mix_inst.get(op);
-                op_token = OpToken::new_mix_op(Box::new(mix_op));
+                op_token = OpToken::new_mix_op(mix_op);
             } else {
                 let pseudo_op = pseudo_op.expect("err");
                 address = pseudo_op.parse_address();

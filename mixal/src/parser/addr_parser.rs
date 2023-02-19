@@ -29,11 +29,6 @@ impl<'a> AddrParser<'a> {
         }
     }
 
-    pub fn parse(&self) -> i32 {
-        //TODO: for ALF it would be something else
-        0
-    }
-
     fn current(&mut self) -> Option<Token> {
         let result = match self.tokens.get(self.current) {
             None => None,
@@ -45,7 +40,7 @@ impl<'a> AddrParser<'a> {
         self.current += 1;
     }
 
-    fn literal_constant(&mut self) -> Vec<(Option<i32>, Option<i32>)> {
+    pub fn literal_constant(&mut self) -> Vec<(Option<i32>, Option<i32>)> {
         match self.current() {
             None => return Vec::new(),
             Some(t) => {
@@ -57,7 +52,7 @@ impl<'a> AddrParser<'a> {
         return self.w_value(Vec::new());
     }
 
-    fn w_value(
+    pub fn w_value(
         &mut self,
         mut acc: Vec<(Option<i32>, Option<i32>)>,
     ) -> Vec<(Option<i32>, Option<i32>)> {
@@ -95,8 +90,7 @@ impl<'a> AddrParser<'a> {
         };
     }
 
-    //TODO: literal_constant,
-    fn aif(&mut self) -> (Option<i32>, Option<i32>, Option<i32>) {
+    pub fn aif(&mut self) -> (Option<i32>, Option<i32>, Option<i32>) {
         let a_part = self.exprs(None);
         // println!("a_part {:#?}", a_part);
 
@@ -214,7 +208,7 @@ impl<'a> AddrParser<'a> {
     fn atom_expr(&self, token: Token) -> Number {
         return match token.get_tag() {
             Tag::NUMBER => Number::new(token.clone()),
-            Tag::SYMBOLS => Number::new(Token::new_number(self.symbols.get(&token.get_symbols()))),
+            Tag::SYMBOLS => Number::new(Token::new_number(self.symbols.get(token.get_symbols()))),
             Tag::MULTIPLY => Number::new(Token::new_number(self.line_num as i32)),
             tag => {
                 panic!("atom_expr syntax error {:#?}", tag);
@@ -313,8 +307,8 @@ mod tests {
     #[test]
     fn binary_op_symbols() {
         let mut table = SymbolTable::new();
-        table.put("x1", 2);
-        table.put("x2", 4);
+        table.put_equ("x1".to_string(), Word::new(2));
+        table.put_equ("x2".to_string(), Word::new(4));
 
         let tokens = vec![
             Token::new_symbols("x1".to_string()),
@@ -546,7 +540,7 @@ mod tests {
         assert_eq!(Some(1), *e1);
         assert_eq!(None, *f1);
 
-        table.put("L", 2);
+        table.put_equ("L".to_string(), Word::new(2));
         let tokens = vec![
             Token::new(Tag::EQUAL, "=".to_string()),
             Token::new_number(1),
