@@ -139,7 +139,7 @@ impl Parser {
                                 Vec::from([Token::new_number(con_value)]),
                             );
 
-                            let indx_before_end = lines.len() - 2;
+                            let indx_before_end = lines.len() - 1;
                             lines.insert(indx_before_end as usize, con);
                         }
                         _ => {

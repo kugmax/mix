@@ -27,15 +27,12 @@ fn main() {
     let lines = parser.parse(tokens);
     println!("program len {}", lines.len());
 
-    let path = "/home/max/Documents/Projects.git/mix/mixal/target/tmp.mix";
-//              /home/max/Documents/Projects.git/mix/mixal
-    // write_programm("./tmp.mix".to_string(), lines);
+    let path = "./tmp.mix";
     let result = write_programm(path.to_string(), lines);
     println!("result {:#?}", result);
 }
 
 fn write_programm(path: String, lines: Vec<String>) -> io::Result<()> {
-    // let mut file = File::create(path.to_string() + &IO_FILE_PREFIX.to_string() + &io_unit.to_string())?;
 
     let mut file = File::options().create(true).append(true).open(path)?;
 
