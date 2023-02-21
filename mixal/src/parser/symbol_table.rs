@@ -1,17 +1,6 @@
-use crate::lexer::token::*;
-use crate::lexer::*;
-use crate::parser::addr_parser::*;
-use crate::pseudo_op::*;
-use crate::tags::*;
 use crate::word::*;
 
 use std::collections::HashMap;
-use std::fmt;
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
-use std::io::BufReader;
-use std::str::FromStr;
 
 pub struct LocalSymbolTabel {
     local_symbols: HashMap<u8, Vec<u32>>,

@@ -4,10 +4,8 @@ use crate::MixInstructions;
 
 use crate::lexer::token::*;
 
-use std::collections::HashMap;
 use std::fmt;
 use std::fs::File;
-use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 
@@ -183,26 +181,6 @@ pub fn split_whitespace_once(line: &str) -> (&str, &str) {
     };
 }
 
-fn read_programm(path: &str) -> Vec<String> {
-    let mut file = File::open(path.to_string()).expect(&("file not found ".to_owned() + path));
-    let mut reader = BufReader::new(file);
-    let mut result = Vec::new();
-
-    let lines = reader.lines();
-    for line in lines {
-        let line = line.expect("some err in lines");
-
-        if line.len() <= 0 {
-            continue;
-        }
-        result.push(line.to_string());
-
-        // println!("{line}");
-    }
-
-    result
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -221,5 +199,25 @@ mod tests {
         let lexer = Lexer::new();
         let sourse = read_programm("./programs/mystery_program.mixal");
         lexer.parse_program_lines(&mix_inst, sourse);
+    }
+
+    fn read_programm(path: &str) -> Vec<String> {
+        let mut file = File::open(path.to_string()).expect(&("file not found ".to_owned() + path));
+        let mut reader = BufReader::new(file);
+        let mut result = Vec::new();
+
+        let lines = reader.lines();
+        for line in lines {
+            let line = line.expect("some err in lines");
+
+            if line.len() <= 0 {
+                continue;
+            }
+            result.push(line.to_string());
+
+            // println!("{line}");
+        }
+
+        result
     }
 }

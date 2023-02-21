@@ -1,14 +1,9 @@
-use crate::new_if_presudo_op;
+// use crate::new_if_presudo_op;
 use crate::pseudo_op::*;
 use crate::tags::Tag;
 use crate::MixInstruction;
 
-use std::collections::HashMap;
 use std::fmt;
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
-use std::io::BufReader;
 
 pub struct Token {
     tag: Tag,

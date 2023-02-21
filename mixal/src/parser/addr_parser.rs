@@ -1,16 +1,5 @@
 use crate::lexer::token::*;
-use crate::lexer::*;
 use crate::parser::*;
-use crate::tags::*;
-use crate::word::*;
-
-use std::collections::HashMap;
-use std::fmt;
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
-use std::io::BufReader;
-use std::str::FromStr;
 
 pub struct AddrParser<'a> {
     symbols: &'a SymbolTable,

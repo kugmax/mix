@@ -9,15 +9,27 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 
+use std::env;
+
 mod lexer;
 mod parser;
 mod pseudo_op;
 mod tags;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let program_path = &args[1];
+    if !program_path.ends_with(".mixal") {
+        panic!("The MIXAL source program should end with '.mixal'")
+    }
+
+    compile(program_path);
+}
+
+fn compile(path: &str) {
     let mix_inst = MixInstructions::new();
-    let lexer = Lexer::new();
-    let sourse = read_programm("./programs/print_500_primes.mixal");
+    let sourse = read_programm(path);
 
     let lexer = Lexer::new();
     let tokens = lexer.parse_program_lines(&mix_inst, sourse);
@@ -25,22 +37,18 @@ fn main() {
     let parser = Parser::new();
 
     let lines = parser.parse(tokens);
-    println!("program len {}", lines.len());
 
-    let path = "./tmp.mix";
-    let result = write_programm(path.to_string(), lines);
-    println!("result {:#?}", result);
+    write_programm(path.to_string().replace(".mixal", ".mix"), lines);
 }
 
 fn write_programm(path: String, lines: Vec<String>) -> io::Result<()> {
-
     let mut file = File::options().create(true).append(true).open(path)?;
 
     for line in lines {
         let mut line = line;
         line += &"\n";
 
-        println!("{line}");
+        // println!("{line}");
         file.write_all(&line.as_bytes())?;
     }
 
@@ -48,8 +56,8 @@ fn write_programm(path: String, lines: Vec<String>) -> io::Result<()> {
 }
 
 fn read_programm(path: &str) -> Vec<String> {
-    let mut file = File::open(path.to_string()).expect(&("file not found ".to_owned() + path));
-    let mut reader = BufReader::new(file);
+    let file = File::open(path.to_string()).expect(&("file not found ".to_owned() + path));
+    let reader = BufReader::new(file);
     let mut result = Vec::new();
 
     let lines = reader.lines();
